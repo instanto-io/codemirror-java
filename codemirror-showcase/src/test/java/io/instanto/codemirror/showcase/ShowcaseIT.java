@@ -143,6 +143,10 @@ public class ShowcaseIT {
       assertEquals(true, page.evaluate("oldView !== showcaseView && oldView.destroyed"));
       assertEquals(1, page.locator(".cm-editor").count());
       assertEquals(before, text());
+      assertEquals(
+          0,
+          ((Number) page.evaluate("showcaseView.state.languageDataAt('commentTokens',0).length"))
+              .intValue());
     }
     int changes = Integer.parseInt(page.locator("#changes").textContent());
     page.locator(".cm-content").click();

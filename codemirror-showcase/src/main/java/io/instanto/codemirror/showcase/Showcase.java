@@ -11,6 +11,7 @@ public final class Showcase {
   private static final String SAMPLE =
       "public class Hello {\n    public static void main(String[] args) {\n        System.out.println(\"Hello from TeaVM\");\n    }\n}\n";
   private static Editor editor;
+  private static Language language = Language.JAVA;
   private static boolean dark = true, readOnly;
   private static int changes;
 
@@ -25,14 +26,16 @@ public final class Showcase {
     on(
         "java",
         () -> {
-          editor.setLanguage(Language.JAVA);
+          language = Language.JAVA;
+          editor.setLanguage(language);
           editor.setText(SAMPLE);
           el("filename").setTextContent("Hello.java");
         });
     on(
         "json",
         () -> {
-          editor.setLanguage(Language.JSON);
+          language = Language.JSON;
+          editor.setLanguage(language);
           editor.setText(
               "{\n  \"editor\": \"CodeMirror 6\",\n  \"language\": \"Java + TeaVM\"\n}\n");
           el("filename").setTextContent("project.json");
@@ -117,8 +120,7 @@ public final class Showcase {
     editor =
         Editor.mount(
             el("editor"),
-            new EditorOptions(
-                text, Language.JAVA, dark ? Theme.DARK : Theme.LIGHT, readOnly, 4, false));
+            new EditorOptions(text, language, dark ? Theme.DARK : Theme.LIGHT, readOnly, 4, false));
     editor.setCompletionSource(
         context -> {
           if (!context.explicit() && context.wordFrom() == context.position()) return null;
@@ -144,6 +146,7 @@ public final class Showcase {
               .setTextContent(
                   "Offset " + update.selection().head() + " · revision " + update.revision());
         });
+    el("position").setTextContent("Offset 0 · revision 0");
     expose(editor.nativeView());
   }
 

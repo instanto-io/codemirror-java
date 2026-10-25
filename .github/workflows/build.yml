@@ -41,7 +41,7 @@ jobs:
           mvn -s .github/maven-settings.xml -B -ntp -Dmaven.repo.local="$MAVEN_CACHE"
           -f codemirror-showcase/pom.xml org.codehaus.mojo:exec-maven-plugin:3.5.0:java
           -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI
-          -Dexec.args="install --with-deps chromium webkit"
+          -Dexec.args="install chromium webkit"
       - name: Verify standard build
         run: mvn -s .github/maven-settings.xml -B -ntp -Dmaven.repo.local="$MAVEN_CACHE" verify
       - name: Verify optimized production build
