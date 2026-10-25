@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.instanto</groupId>
+    <artifactId>instanto-teavm-pom</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath/>
+  </parent>
+  <artifactId>codemirror-teavm-parent</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>CodeMirror TeaVM</name>
+  <description>Idiomatic Java bindings for CodeMirror 6 on TeaVM</description>
+  <url>https://github.com/instanto-io/codemirror-teavm</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <scm>
+    <url>https://github.com/instanto-io/codemirror-teavm</url>
+    <connection>scm:git:https://github.com/instanto-io/codemirror-teavm.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/instanto-io/codemirror-teavm.git</developerConnection>
+    <tag>HEAD</tag>
+  </scm>
+  <properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <teavm.optimization>SIMPLE</teavm.optimization>
+  </properties>
+  <modules>
+    <module>codemirror-webjar</module>
+    <module>codemirror-teavm</module>
+    <module>codemirror-showcase</module>
+  </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <proc>none</proc>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <profiles>
+    <profile>
+      <id>production</id>
+      <properties>
+        <teavm.optimization>ADVANCED</teavm.optimization>
+      </properties>
+    </profile>
+  </profiles>
+</project>
