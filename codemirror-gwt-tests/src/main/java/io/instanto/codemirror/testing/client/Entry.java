@@ -8,6 +8,14 @@ import java.util.List;
 
 public class Entry implements EntryPoint {
   public void onModuleLoad() {
+    CodeMirrorResources.setScriptUrl(Editor.ASSET_PATH + "?gwt-contract");
+    CodeMirrorResources.whenReady(
+        this::start, error -> DomGlobal.document.body.setAttribute("data-error", error.toString()));
+    CodeMirrorResources.whenReady(
+        () -> DomGlobal.document.body.setAttribute("data-shared-load", "true"), error -> {});
+  }
+
+  private void start() {
     try {
       WidgetChecks.run();
       Editor editor = Editor.mount((HTMLElement) DomGlobal.document.getElementById("editor"));

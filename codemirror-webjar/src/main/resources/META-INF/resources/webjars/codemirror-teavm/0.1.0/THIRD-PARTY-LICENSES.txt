@@ -1,4 +1,4 @@
-CodeMirror TeaVM browser bundle — third-party licenses
+CodeMirror Java browser bundle — third-party licenses
 
 
 === @codemirror/autocomplete@6.20.4 (MIT) ===

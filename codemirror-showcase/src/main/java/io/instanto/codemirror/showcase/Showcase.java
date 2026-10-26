@@ -18,15 +18,31 @@ public final class Showcase {
   private Showcase() {}
 
   public static void main(String[] args) {
-    if (!Editor.isAvailable()) {
-      el("status").setTextContent("Unable to load editor assets. Check the bundled script path.");
-      return;
-    }
+    on("retry-load", Showcase::loadResources);
+    loadResources();
+  }
+
+  private static void loadResources() {
+    el("retry-load").setAttribute("hidden", "");
+    status("Loading editor…");
+    CodeMirrorResources.whenReady(
+        Showcase::start,
+        error -> {
+          status("Unable to load editor assets. Check the served asset path, then retry.");
+          el("retry-load").removeAttribute("hidden");
+        });
+    CodeMirrorResources.whenReady(
+        () -> DOC.getBody().setAttribute("data-shared-load", "true"), error -> {});
+  }
+
+  private static void start() {
     mount(SAMPLE);
     on(
         "java",
         () -> {
           language = Language.JAVA;
+          el("java").setAttribute("aria-pressed", "true");
+          el("json").setAttribute("aria-pressed", "false");
           editor.setLanguage(language);
           editor.setText(SAMPLE);
           el("filename").setTextContent("Hello.java");
@@ -35,6 +51,8 @@ public final class Showcase {
         "json",
         () -> {
           language = Language.JSON;
+          el("java").setAttribute("aria-pressed", "false");
+          el("json").setAttribute("aria-pressed", "true");
           editor.setLanguage(language);
           editor.setText(
               "{\n  \"editor\": \"CodeMirror 6\",\n  \"language\": \"Java + TeaVM\"\n}\n");
@@ -113,6 +131,7 @@ public final class Showcase {
             throw e;
           }
         });
+    status("Ready. Type pri, then use Complete or Ctrl+Space.");
     DOC.getBody().setAttribute("data-ready", "true");
   }
 

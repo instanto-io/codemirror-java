@@ -15,7 +15,8 @@ public final class Editor implements AutoCloseable {
     Objects.requireNonNull(parent);
     Objects.requireNonNull(options);
     if (!isAvailable())
-      throw new IllegalStateException("Load " + ASSET_PATH + " before mounting an editor");
+      throw new IllegalStateException(
+          "Call CodeMirrorResources.whenReady before mounting an editor");
     handle =
         Native.create(
             parent,

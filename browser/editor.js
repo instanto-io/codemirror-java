@@ -17,10 +17,12 @@ export const apiVersion = 1;
 const languages = {PLAIN: () => [], JAVA: java, JAVASCRIPT: javascript,
   TYPESCRIPT: () => javascript({typescript:true}), JSON: json, HTML: html, CSS: css, PYTHON: python};
 const themes = {LIGHT: [], DARK: oneDark};
+const layoutTheme = view.EditorView.theme({"&":{height:"100%"},".cm-scroller":{overflow:"auto"}});
 export function create(parent, text, language, theme, readOnly, tabSize, wrap, listener) {
   const compartments = Object.fromEntries(['language','theme','readOnly','tabSize','wrap','completion','custom'].map(k => [k,new state.Compartment()]));
   const handle = {view:null, compartments, revision:0, listener, destroyed:false};
   handle.view = new view.EditorView({parent, doc:text, extensions:[basicSetup, searchExtension(), lintGutter(),
+    layoutTheme,
     compartments.language.of(languages[language]()), compartments.theme.of(themes[theme]),
     compartments.readOnly.of([state.EditorState.readOnly.of(readOnly),view.EditorView.editable.of(!readOnly)]),
     compartments.tabSize.of(state.EditorState.tabSize.of(tabSize)),

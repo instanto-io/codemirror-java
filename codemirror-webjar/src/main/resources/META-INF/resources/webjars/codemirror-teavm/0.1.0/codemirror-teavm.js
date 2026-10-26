@@ -29370,6 +29370,7 @@ var CodeMirrorTea = (() => {
     PYTHON: python
   };
   var themes = { LIGHT: [], DARK: oneDark };
+  var layoutTheme = EditorView.theme({ "&": { height: "100%" }, ".cm-scroller": { overflow: "auto" } });
   function create(parent, text2, language2, theme2, readOnly2, tabSize, wrap, listener) {
     const compartments = Object.fromEntries(["language", "theme", "readOnly", "tabSize", "wrap", "completion", "custom"].map((k) => [k, new Compartment()]));
     const handle = { view: null, compartments, revision: 0, listener, destroyed: false };
@@ -29377,6 +29378,7 @@ var CodeMirrorTea = (() => {
       basicSetup,
       search(),
       lintGutter(),
+      layoutTheme,
       compartments.language.of(languages[language2]()),
       compartments.theme.of(themes[theme2]),
       compartments.readOnly.of([EditorState.readOnly.of(readOnly2), EditorView.editable.of(!readOnly2)]),

@@ -1,6 +1,6 @@
 {
   "bundleVersion": "0.1.0",
-  "sha256": "348a8aa13f43cceeae78843eb4e729e002e93bc2117a4b8979d0b106f755522c",
+  "sha256": "13cb8825de5990a90a3c05db625f7960f25a1fdbe0d30b418c4df614be98aaba",
   "packages": {
     "@codemirror/autocomplete": {
       "version": "6.20.4",

@@ -10,9 +10,9 @@
   <artifactId>codemirror-teavm-parent</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>CodeMirror TeaVM</name>
-  <description>Idiomatic Java bindings for CodeMirror 6 on TeaVM</description>
-  <url>https://github.com/instanto-io/codemirror-teavm</url>
+  <name>CodeMirror Java</name>
+  <description>Java bindings for CodeMirror 6 on GWT and TeaVM</description>
+  <url>https://github.com/instanto-io/codemirror-java</url>
   <licenses>
     <license>
       <name>MIT</name>
@@ -20,9 +20,9 @@
     </license>
   </licenses>
   <scm>
-    <url>https://github.com/instanto-io/codemirror-teavm</url>
-    <connection>scm:git:https://github.com/instanto-io/codemirror-teavm.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/instanto-io/codemirror-teavm.git</developerConnection>
+    <url>https://github.com/instanto-io/codemirror-java</url>
+    <connection>scm:git:https://github.com/instanto-io/codemirror-java.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/instanto-io/codemirror-java.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
   <properties>

@@ -16,9 +16,11 @@ final class Native {
     Object complete(String text, int pos, boolean explicit, int from);
   }
 
+  public static int apiVersion;
+
   @JsOverlay
   static boolean available() {
-    return jsinterop.base.Js.global().get("CodeMirrorTea") != null;
+    return jsinterop.base.Js.global().get("CodeMirrorTea") != null && apiVersion == 1;
   }
 
   public static native Object create(

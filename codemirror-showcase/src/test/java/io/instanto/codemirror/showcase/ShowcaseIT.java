@@ -24,6 +24,7 @@ public class ShowcaseIT {
   private Browser browser;
   private Page page;
   private final List<String> errors = new ArrayList<>();
+  private int bundleRequests;
 
   public ShowcaseIT(String engine) {
     this.engine = engine;
@@ -64,6 +65,7 @@ public class ShowcaseIT {
     page.onPageError(errors::add);
     page.onRequest(
         r -> {
+          if (r.url().endsWith("/codemirror-teavm.js")) bundleRequests++;
           if (!r.url().startsWith("http://127.0.0.1:"))
             errors.add("Unexpected external request: " + r.url());
         });
@@ -71,7 +73,8 @@ public class ShowcaseIT {
 
   private void load() {
     page.navigate("http://127.0.0.1:" + server.getAddress().getPort() + "/project/");
-    page.waitForFunction("document.body.dataset.ready === 'true'");
+    page.waitForFunction(
+        "document.body.dataset.ready === 'true' && document.body.dataset.sharedLoad === 'true'");
   }
 
   @After
@@ -96,6 +99,7 @@ public class ShowcaseIT {
     page.locator(".cm-content").click();
     page.keyboard().press("ControlOrMeta+A");
     page.keyboard().insertText("alpha beta alpha");
+    page.locator("#demo-actions summary").click();
     page.locator("#save").click();
     assertTrue(page.locator("#status").textContent().contains("16 UTF-16"));
     page.locator("#undo").click();
@@ -152,13 +156,25 @@ public class ShowcaseIT {
     page.locator(".cm-content").click();
     page.keyboard().insertText("x");
     assertEquals(changes + 1, Integer.parseInt(page.locator("#changes").textContent()));
-    assertEquals(1, page.locator("script[src*='codemirror-teavm.js']").count());
+    assertEquals(1, bundleRequests);
     assertTrue(errors.toString(), errors.isEmpty());
   }
 
   @Test
   public void responsiveShowcaseAndLicenses() throws Exception {
     load();
+    assertFalse(page.locator("#recreate").isVisible());
+    page.locator("#demo-actions summary").click();
+    assertTrue(page.locator("#recreate").isVisible());
+    page.locator("#demo-actions summary").click();
+    assertEquals(1, bundleRequests);
+    assertTrue(
+        ((Number)
+                    page.evaluate(
+                        "document.querySelector('.cm-editor').getBoundingClientRect().height"))
+                .doubleValue()
+            > 300);
+
     page.screenshot(
         new Page.ScreenshotOptions()
             .setPath(Path.of("target/desktop-" + engine + ".png"))
@@ -196,6 +212,28 @@ public class ShowcaseIT {
     page.waitForFunction(
         "document.querySelector('#status').textContent.includes('Unable to load editor assets')");
     assertEquals(0, page.locator(".cm-editor").count());
+    page.unroute("**/codemirror-teavm.js");
+    page.locator("#retry-load").click();
+    page.waitForFunction("document.body.dataset.ready === 'true'");
+    assertEquals(1, page.locator(".cm-editor").count());
+    assertEquals(2, bundleRequests);
+    assertTrue(errors.toString(), errors.isEmpty());
+  }
+
+  @Test
+  public void incompatibleBundleReportsFailure() {
+    page.route(
+        "**/codemirror-teavm.js",
+        r ->
+            r.fulfill(
+                new Route.FulfillOptions()
+                    .setContentType("text/javascript")
+                    .setBody("window.CodeMirrorTea = {apiVersion: 99};")));
+    page.navigate("http://127.0.0.1:" + server.getAddress().getPort() + "/project/");
+    page.waitForFunction(
+        "document.querySelector('#status').textContent.includes('Unable to load editor assets')");
+    assertEquals(0, page.locator(".cm-editor").count());
+    assertTrue(page.locator("#retry-load").isVisible());
     assertTrue(errors.toString(), errors.isEmpty());
   }
 

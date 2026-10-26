@@ -1,12 +1,52 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>CodeMirror · TeaVM</title><link rel="stylesheet" href="showcase.css"></head>
-<body data-theme="dark"><main>
-<header><a class="brand" href="https://github.com/instanto-io/codemirror-teavm">INSTANTO <span>/ OPEN SOURCE</span></a><a href="https://github.com/instanto-io/codemirror-teavm">Source ↗</a></header>
-<section class="intro"><p class="eyebrow">JAVA IN THE BROWSER</p><h1>A modern editor.<br><span>A familiar language.</span></h1><p>CodeMirror 6, with an idiomatic Java API for TeaVM.<br>Edit, search, complete, and diagnose—all driven by Java.</p></section>
-<section class="workspace" aria-label="Code editor playground"><div class="toolbar"><div class="tabs"><button id="java">Java</button><button id="json">JSON</button></div><div><button id="theme">Light / dark</button><button id="readonly" aria-pressed="false">Read-only</button></div></div><div class="filebar"><span id="filename">Hello.java</span><span>CodeMirror 6</span></div><div id="editor"></div><div class="statusbar"><span id="position">Offset 0 · revision 0</span><span><b id="changes">0</b> changes</span></div></section>
-<section class="controls" aria-label="Editor actions"><div><p class="eyebrow">EDIT & NAVIGATE</p><button id="undo">Undo</button><button id="redo">Redo</button><button id="search">Search & replace</button><button id="select">Select range</button><button id="save">Read text</button></div><div><p class="eyebrow">JAVA EXTENSIONS</p><button id="complete">Complete</button><button id="diagnostics">Add diagnostic</button><button id="clear">Clear diagnostics</button><button id="recreate">Recreate editor</button></div></section>
-<p id="status" role="status">Ready. Try typing “pri”, then choose Complete.</p>
-<div class="notes"><article><h2>State that stays intact</h2><p>Language and theme switches use compartments. Transactions group changes into a single undo step.</p></article><article><h2>Java where it matters</h2><p>Typed selections, removable update listeners, custom completion sources, and revision-aware diagnostics.</p></article><article><h2>One local bundle</h2><p>Pinned modules, a Maven WebJar, and retained third-party licenses. No runtime CDN dependency.</p></article></div>
-<footer><span>CodeMirror TeaVM · initial preview</span><a href="legal/index.html">Licenses & attribution</a></footer>
-<div hidden><button id="contracts">Run contracts</button><output id="contract-result"></output><button id="fixture">Completion fixture</button></div>
-</main><script src="webjars/codemirror-teavm/0.1.0/codemirror-teavm.js"></script><script src="showcase.js"></script><script>main();</script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodeMirror Java · Playground</title>
+  <link rel="stylesheet" href="showcase.css">
+</head>
+<body data-theme="dark">
+<main>
+  <header>
+    <div><h1>CodeMirror Java</h1><p>CodeMirror 6 bindings for GWT and TeaVM</p></div>
+    <nav aria-label="Project links"><a href="https://github.com/instanto-io/codemirror-java#readme">Documentation</a><a href="https://github.com/instanto-io/codemirror-java">Source ↗</a></nav>
+  </header>
+  <section class="workspace" aria-label="Code editor playground">
+    <div class="filebar">
+      <div class="file-tabs" role="group" aria-label="Example document">
+        <button id="java" aria-pressed="true" title="Load the Java example">Java</button>
+        <button id="json" aria-pressed="false" title="Load the JSON example">JSON</button>
+      </div>
+      <span id="filename">Hello.java</span>
+    </div>
+    <div class="toolbar">
+      <div role="group" aria-label="Editing commands">
+        <button id="undo" title="Undo (Ctrl/Cmd+Z)">Undo</button>
+        <button id="redo" title="Redo">Redo</button>
+        <button id="search" title="Search and replace (Ctrl/Cmd+F)">Search</button>
+        <button id="complete" title="Show completions (Ctrl+Space)">Complete</button>
+      </div>
+      <div role="group" aria-label="Editor settings">
+        <button id="readonly" aria-pressed="false">Read-only</button>
+        <button id="theme" title="Switch between light and dark themes">Light / dark</button>
+      </div>
+    </div>
+    <div id="editor"></div>
+    <div class="statusbar"><span id="position">Offset 0 · revision 0</span><span><b id="changes">0</b> changes</span></div>
+    <details id="demo-actions">
+      <summary>API demonstrations</summary>
+      <div class="demo-actions">
+        <p>Try the Java API for selection, diagnostics and editor disposal.</p>
+        <div><button id="select">Select range</button><button id="save">Read text</button><button id="diagnostics">Add diagnostic</button><button id="clear">Clear diagnostics</button><button id="recreate">Recreate editor</button></div>
+      </div>
+    </details>
+  </section>
+  <div class="feedback"><p id="status" role="status">Loading editor…</p><button id="retry-load" hidden>Retry loading</button></div>
+  <p class="help">Search opens inside the editor. Completions appear beside the cursor; diagnostics appear in the gutter and under the affected text.</p>
+  <footer><span>Alpha · 0.1.0-SNAPSHOT · This playground runs on TeaVM</span><a href="legal/index.html">Licenses & attribution</a></footer>
+  <div hidden><button id="contracts">Run contracts</button><output id="contract-result"></output><button id="fixture">Completion fixture</button></div>
+</main>
+<script src="showcase.js"></script><script>main();</script>
+</body>
+</html>

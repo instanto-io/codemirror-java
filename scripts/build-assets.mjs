@@ -6,7 +6,7 @@ const out='codemirror-webjar/src/main/resources/META-INF/resources/webjars/codem
 await mkdir(out,{recursive:true});
 const result=await build({entryPoints:['browser/editor.js'],bundle:true,format:'iife',globalName:'CodeMirrorTea',target:['es2020'],outfile:`${out}/codemirror-teavm.js`,metafile:true,legalComments:'inline'});
 const packages=new Set(Object.keys(result.metafile.inputs).filter(p=>p.startsWith('node_modules/')).map(p=>p.split('/').slice(1,p.split('/')[1].startsWith('@')?3:2).join('/')));
-let notices='CodeMirror TeaVM browser bundle — third-party licenses\n\n';
+let notices='CodeMirror Java browser bundle — third-party licenses\n\n';
 const versions={};
 for(const name of [...packages].sort()) {
  const root=path.join('node_modules',name);

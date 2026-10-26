@@ -1,4 +1,4 @@
-CodeMirror TeaVM
+CodeMirror Java
 Copyright (c) 2026 Instanto. Original Java bindings and integration code: MIT.
 
 CodeMirror, Lezer and the other browser dependencies retain their own MIT
@@ -7,11 +7,11 @@ webjars/codemirror-teavm/0.1.0/THIRD-PARTY-LICENSES.txt and exact versions in
 manifest.json. Preserve these when redistributing the browser bundle.
 
 The showcase is compiled with TeaVM 0.16.0 (Apache-2.0), including its
-browser runtime, and uses Instanto's GWT, Elemental2 and JsInterop compatibility
+browser runtime, and uses the gwt-user-compat, elemental2-compat and JsInterop compatibility
 libraries. Their full licenses and notices are retained in the showcase legal
 runtime directory. The GWT build targets GWT 2.13.1 (Apache-2.0); its upstream
 license information is retained there too.
 
 Historical GWT wrappers were reviewed as API references only. No Protégé,
 Geomajas, or Gerrit wrapper source is included or translated in this project.
-CodeMirror TeaVM is an independent integration, not an official CodeMirror project.
+CodeMirror Java is an independent integration, not an official CodeMirror project.

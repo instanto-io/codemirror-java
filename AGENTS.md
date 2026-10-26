@@ -1,4 +1,4 @@
-# CodeMirror TeaVM maintenance
+# CodeMirror Java maintenance
 
 Keep library-specific work in this repository. Reusable compatibility fixes belong in teavm-compat and must be tested there before dependent ports are published.
 

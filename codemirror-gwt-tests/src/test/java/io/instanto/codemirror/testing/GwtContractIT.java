@@ -46,10 +46,17 @@ public class GwtContractIT {
           var page = browser.newPage();
           List<String> errors = new ArrayList<>();
           page.onPageError(errors::add);
+          int[] requests = {0};
+          page.onRequest(
+              r -> {
+                if (r.url().endsWith("/codemirror-teavm.js?gwt-contract")) requests[0]++;
+              });
           page.navigate("http://127.0.0.1:" + server.getAddress().getPort() + "/");
           page.waitForFunction(
               "document.body.dataset.ready==='true' || document.body.dataset.error");
           assertNull(page.locator("body").getAttribute("data-error"));
+          page.waitForFunction("document.body.dataset.sharedLoad === 'true'");
+          assertEquals(1, requests[0]);
           page.waitForSelector(".cm-tooltip-autocomplete");
           page.locator(".cm-tooltip-autocomplete li")
               .filter(new Locator.FilterOptions().setHasText("println"))

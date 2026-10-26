@@ -1,4 +1,4 @@
-<?xml version="1.0" ?>
+<?xml version='1.0' encoding='UTF-8'?>
 <project xmlns="http://maven.apache.org/POM/4.0.0">
   <modelVersion>4.0.0</modelVersion>
   <parent>
@@ -35,21 +35,37 @@
   </dependencies>
   <build>
     <plugins>
-      <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.1</version><executions><execution><id>shared-widget-contracts</id><phase>generate-sources</phase><goals><goal>add-source</goal></goals><configuration><sources><source>../codemirror-gwt-tests/src/main/java</source></sources></configuration></execution></executions></plugin>
       <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.9.0</version>
+        <groupId>io.instanto</groupId>
+        <artifactId>gwt-resources-compat-maven-plugin</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
         <executions>
           <execution>
-            <id>assets</id>
-            <phase>generate-resources</phase>
+            <id>stage-library-assets</id>
             <goals>
-              <goal>unpack-dependencies</goal>
+              <goal>stage-assets</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <outputDirectory>${project.build.directory}/site</outputDirectory>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>shared-widget-contracts</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
             </goals>
             <configuration>
-              <includeArtifactIds>codemirror-webjar</includeArtifactIds>
-              <includes>META-INF/resources/**</includes>
-              <outputDirectory>${project.build.directory}/assets</outputDirectory>
+              <sources>
+                <source>../codemirror-gwt-tests/src/main/java</source>
+              </sources>
             </configuration>
           </execution>
         </executions>
@@ -86,9 +102,6 @@
               <resources>
                 <resource>
                   <directory>src/main/webapp</directory>
-                </resource>
-                <resource>
-                  <directory>${project.build.directory}/assets/META-INF/resources</directory>
                 </resource>
                 <resource>
                   <directory>..</directory>
