@@ -1,8 +1,10 @@
 # CodeMirror Java
 
-Java bindings for **CodeMirror 6**, with builds for **GWT** and **TeaVM**.
-The library includes editing, selection, search, completion, diagnostics and a
-WebJar containing the editor and language modules.
+CodeMirror Java lets you embed a **CodeMirror 6** text editor in a browser
+application written in Java. Your application can read and change the document,
+respond to edits, offer completions and display validation messages through a
+Java API. The editor itself runs in the browser, with builds of the library for
+both **GWT** and **TeaVM**.
 
 **Alpha — `0.1.0-SNAPSHOT`.** The API and packaging may change. We target
 CodeMirror 6 and maintain one GWT/JsInterop source API for both platforms.
@@ -11,6 +13,32 @@ CodeMirror 6 and maintain one GWT/JsInterop source API for both platforms.
 [GWT setup](#gwt) · [TeaVM setup](#teavm) · [Shared API](#shared-api) ·
 [Upstream research](docs/UPSTREAM.md)
 
+## What the library provides
+
+You can use the editor for a JSON configuration form, a source-code editing pane,
+a template editor or a read-only code viewer. CodeMirror handles the text view,
+keyboard editing, syntax highlighting, selection and undo history. Your Java
+application supplies the document and decides what to do with changes: save them,
+validate them, or use them elsewhere in the UI.
+
+The Java API wraps common CodeMirror operations in types such as `Editor`,
+`Selection`, `Completion` and `Diagnostic`. For these features, you work with Java
+methods and callbacks instead of constructing CodeMirror's JavaScript state and
+view objects yourself. `CodeMirrorWidget` adds GWT panel integration, sizing and
+value-change events for applications built around widgets.
+
+We maintain one GWT/JsInterop source API for both compiler targets. The GWT build
+uses GWT's DOM and widget APIs directly. The TeaVM build adapts those same sources
+using Instanto's compatibility layers, so the editor and widget code shown here
+can be used with either compiler. Both builds call the same bundled CodeMirror
+JavaScript implementation in the browser.
+
+The bundle includes the language support and themes listed below. Your application
+still supplies its own persistence and any domain-specific validation or completion
+logic. For example, selecting Java syntax highlighting does not supply a Java
+compiler or a language server. The [implemented scope](#implemented-scope) describes
+which features have Java bindings and which remain outside this alpha.
+
 ## Choose your platform
 
 | Platform | Library artifact | Verified compiler |
@@ -18,9 +46,11 @@ CodeMirror 6 and maintain one GWT/JsInterop source API for both platforms.
 | GWT | `io.instanto:codemirror-gwt:0.1.0-SNAPSHOT` | GWT 2.13.1 |
 | TeaVM | `io.instanto:codemirror-teavm:0.1.0-SNAPSHOT` | TeaVM 0.16.0 |
 
-Choose one library artifact. Both include `io.instanto:codemirror-webjar`.
-The project and repository are named CodeMirror Java; existing Maven coordinates,
-Java packages, and versioned browser asset paths remain unchanged.
+Choose the artifact for the compiler that builds your application. Both bring in
+`io.instanto:codemirror-webjar`, a JAR containing the prebuilt browser bundle and
+its license notices. You use the same Java packages and editor API in either case.
+The `codemirror-teavm` name in existing browser asset paths is retained for
+compatibility; those assets are also used by the GWT build.
 
 The examples below use development snapshot coordinates. Build and install the
 artifacts from source for local use; a Maven Central release is not yet available.
@@ -29,7 +59,8 @@ artifacts from source for local use; a Maven Central release is not yet availabl
 
 ### Dependency and module
 
-Add the GWT artifact to an application using GWT 2.13.1:
+In a GWT application, the dependency provides the Java sources that GWT compiles
+alongside your own code. Add it to your application's POM:
 
 ```xml
 <dependency>
@@ -39,7 +70,8 @@ Add the GWT artifact to an application using GWT 2.13.1:
 </dependency>
 ```
 
-In your application's GWT module, inherit:
+The GWT module declaration makes those sources available to the compiler. Add
+this entry to your application's `.gwt.xml` file:
 
 ```xml
 <inherits name="io.instanto.CodeMirror"/>
@@ -50,15 +82,23 @@ In your application's GWT module, inherit:
 
 ### Host page and entry point
 
-Configure asset staging as described under [Browser assets](#browser-assets).
-For an application module renamed to `app`, the host page starts the application:
+The host page provides a place for the editor and starts your GWT application.
+For a module renamed to `app`, a minimal page contains the following elements.
+The container has a height so there is visible space for the editor.
 
 ```html
 <div id="editor" style="height:320px"></div>
 <script src="app/app.nocache.js"></script>
 ```
 
-Mount the editor in your GWT entry point:
+In the entry point, ask `CodeMirrorResources` to load the editor bundle. Its first
+callback runs when the editor is ready to create; the second lets your application
+show a useful message if loading fails. `Editor.mount(...)` then creates the
+editor inside the container and returns the Java object used to control it.
+
+The bundle must be available on your website for this to work. The
+[browser assets section](#browser-assets) explains how to arrange that during
+your build.
 
 ```java
 import com.google.gwt.core.client.EntryPoint;
@@ -91,7 +131,9 @@ A working compiler configuration and browser contract page are in
 
 ### Dependency and build modules
 
-Add the TeaVM artifact to an application using the Instanto TeaVM 0.16.0 toolchain:
+In a TeaVM application, use the artifact prepared for the Instanto TeaVM 0.16.0
+toolchain. It exposes the same Java API as the GWT artifact, with the compatibility
+implementations needed to run it through TeaVM:
 
 ```xml
 <dependency>
@@ -101,7 +143,9 @@ Add the TeaVM artifact to an application using the Instanto TeaVM 0.16.0 toolcha
 </dependency>
 ```
 
-The TeaVM library uses these specific modules:
+The compatibility work is shared with the other Instanto libraries. These modules
+provide the GWT and Elemental2 APIs used by the editor, and adapt the library's
+sources during its build:
 
 | Module | Purpose |
 | --- | --- |
@@ -118,8 +162,10 @@ compiler configuration and `org.teavm:teavm-classlib` dependency. See the comple
 
 ### Host page and main method
 
-Configure [asset staging](#browser-assets) in the application build. The host
-page starts the JavaScript generated by TeaVM; Java loads the editor resources:
+The host page starts the JavaScript compiled from your application. That
+application then loads CodeMirror through the same Java resource loader used by
+the GWT example. This keeps resource loading and error handling in your application
+code. Give the editor a container with a height:
 
 ```html
 <div id="editor" style="height:320px"></div>
@@ -128,7 +174,9 @@ page starts the JavaScript generated by TeaVM; Java loads the editor resources:
 ```
 
 Configure your fully qualified `App` class as TeaVM's `mainClass`, and `app.js`
-as its output file:
+as its output file. The main method waits for CodeMirror, creates the editor and
+sets its initial language and text. As with GWT, the bundle needs to be copied
+into the website as explained under [Browser assets](#browser-assets).
 
 ```java
 import com.google.gwt.dom.client.Document;
@@ -156,24 +204,28 @@ verified; WebAssembly is outside the current tested scope.
 
 ## Browser assets
 
-`CodeMirrorResources.whenReady(ready, failed)` loads the complete editor bundle,
-including language support and themes, on either platform. CodeMirror injects
-its core, theme, search, completion and diagnostic styles; the binding also
-supplies its fill-container and scrolling styles. Set the container's dimensions
-or call `CodeMirrorWidget.setSize(...)` to choose your application's layout.
+Adding the Maven dependency gives your Java code access to the editor API. The
+browser also needs the JavaScript that implements CodeMirror. We ship that code
+as a prebuilt bundle inside `codemirror-webjar`, together with its language
+support, themes and license notices.
 
-Concurrent calls share one download. Callbacks run asynchronously. A failed
-load reaches `failed`; a later call can retry. If assets are served at a different
-URL, call `CodeMirrorResources.setScriptUrl(...)` before loading. The default URL
-is relative to the host page: `webjars/codemirror-teavm/0.1.0/codemirror-teavm.js`.
-That versioned path and the JavaScript namespace remain stable across the rename.
-`Editor.isAvailable()` checks that a supported bundle is present.
+There are two parts to making that bundle available. During the build, its files
+are copied from the JAR into the website you will deploy. This is what we mean by
+*asset staging*. When someone opens the application, `CodeMirrorResources` loads
+the bundle from that website and tells your Java code when it is ready. Staging
+prepares the files; loading makes them available in the current browser page.
 
 ### Automatic asset staging
 
-The WebJar includes `META-INF/teavm-assets.properties`, which describes every
-browser asset and its destination. Add the shared asset-staging goal to your
-application build:
+For an application that produces a static website folder, the shared
+`stage-assets` Maven goal performs the copying. It reads the asset description
+included in the WebJar, so your build does not need to name and unpack each file
+individually. It works with either the GWT or TeaVM library artifact.
+
+Add the following plugin under `<build><plugins>` in your application POM. This
+example uses `target/site` as the folder that will contain the website. Set
+`outputDirectory` to the folder where your own build collects its host page and
+compiled application JavaScript.
 
 ```xml
 <plugin>
@@ -189,37 +241,105 @@ application build:
 </plugin>
 ```
 
-`mvn package` stages the script, manifest and license notices from dependencies
-into the site's output folder. Deploy that folder with the compiled application.
-The same staging goal works for a GWT application; a server that already serves
-WebJar resources can expose those files directly instead. Both compiler examples
-in this repository use staging and Java resource loading in their browser tests.
-See the [plugin documentation](https://github.com/instanto-io/teavm-compat/tree/main/gwt-resources-compat-maven-plugin)
-for other asset types such as CSS, fonts and images.
+When you run `mvn package`, this goal copies the editor script, version manifest
+and license notices into that folder. If your build also places `index.html`
+and its compiled application there, the resulting layout includes:
 
-The page's own styling and application bootstrap remain application resources.
-The library manages all assets required for the editor.
+```text
+target/site/
+  index.html
+  ...compiled application files...
+  webjars/codemirror-teavm/0.1.0/
+    codemirror-teavm.js
+    manifest.json
+    THIRD-PARTY-LICENSES.txt
+```
+
+Deploy the website folder with these files together. The staging goal supplies
+the library assets; your application's build still supplies its HTML, application
+JavaScript and page styling. Both compiler examples in this repository use this
+arrangement and exercise it in their browser tests.
+
+The WebJar records its source and destination paths in
+`META-INF/teavm-assets.properties`. The shared plugin uses that description to
+preserve the layout expected by the loader. Its
+[documentation](https://github.com/instanto-io/teavm-compat/tree/main/gwt-resources-compat-maven-plugin)
+explains how the same mechanism handles other libraries' CSS, fonts and images.
+If your web server already serves WebJar resources directly, you can use that
+facility instead of copying them into a static output folder.
+
+### Load the editor when your screen needs it
+
+Once the files are served by your website, call
+`CodeMirrorResources.whenReady(ready, failed)` before mounting an `Editor` or
+attaching a `CodeMirrorWidget`. The loader downloads the bundle and checks that
+it provides the supported editor API. It then calls `ready`, where your code can
+create and configure the editor, or `failed`, where it can explain the problem
+to the user and offer a retry.
+
+The default script URL is
+`webjars/codemirror-teavm/0.1.0/codemirror-teavm.js`, relative to the host page.
+That is why the staged layout above works with a page at the site's root. If
+your page is in a different directory, or your server exposes assets at another
+location, call `CodeMirrorResources.setScriptUrl(...)` with the URL it serves
+before the first load. For example, a site served from `/my-app/` can use:
+
+```java
+CodeMirrorResources.setScriptUrl(
+    "/my-app/webjars/codemirror-teavm/0.1.0/codemirror-teavm.js");
+```
+
+Several screens can request the resources at once: their requests share one
+download. Callbacks run asynchronously, including when the bundle is already
+available. A later call can retry a failed load. `Editor.isAvailable()` lets you
+check availability without starting a download.
+
+### Give the editor space in your layout
+
+CodeMirror supplies its editor, theme, search, completion and diagnostic styles
+when an editor is created. The binding also provides the styles that make the
+editor fill its container and scroll within it. The bundled setup therefore
+loads through the Java loader without a separate editor stylesheet in your page.
+
+Your application chooses the size and position of the container. Set its height
+in your page styling, or use `CodeMirrorWidget.setSize(...)` when working with
+widgets. This lets the editor fit into your existing form or panel layout while
+CodeMirror handles the contents of the editing area.
 
 ## Editor or CodeMirrorWidget?
+
+Choose the form that fits how your application builds its screens. If you already
+manage DOM elements, mount an `Editor` in one of them. If you use GWT panels,
+`CodeMirrorWidget` makes the editor participate in the normal widget lifecycle.
+This widget option also works on TeaVM through `gwt-user-compat`.
 
 | Type | Use when | Ownership |
 | --- | --- | --- |
 | `Editor` | Your screen manages DOM containers directly | Mount after attachment; call `close()` before removing the container |
 | `CodeMirrorWidget` | Your UI uses GWT panels, including on TeaVM with `gwt-user-compat` | Widget attachment creates the editor; detachment disposes it and retains text |
 
-The widget wraps the same `Editor` API and adds sizing and value-change events.
-`getEditor()` exposes that API while attached. Both use
-`CodeMirrorResources.whenReady(...)` before creation/attachment.
-`EditorOptions` supplies initial text, language, theme, read-only state, tab size
-and wrapping. `Editor.mount` accepts GWT DOM elements or Elemental2 `HTMLElement`.
+Both forms control the same editor. The widget adds sizing and value-change
+events; while it is attached, `getEditor()` gives you access to the full `Editor`
+API. Load the resources before mounting the editor or attaching the widget, as
+shown above.
+
+You can supply `EditorOptions` to choose the initial text, language, theme,
+read-only state, tab size and wrapping. Direct mounting accepts either a GWT DOM
+element or an Elemental2 `HTMLElement`, so it can fit into either style of UI code.
 
 ## Shared API
 
-The following APIs work on both compiler targets.
+Once an editor is mounted, the following operations work on both compiler targets.
+The examples build from ordinary text editing to application-supplied completion
+and diagnostics. They use `editor` for an existing `Editor` instance; when using
+a widget, obtain that instance with `widget.getEditor()` while it is attached.
 
 ### Widget lifecycle
 
-`CodeMirrorWidget` works with GWT and with `io.instanto:gwt-user-compat` on TeaVM:
+A widget is useful when the editor is part of a form or a screen assembled from
+GWT panels. You can give it an initial value and listen for changes in the same
+way as another value-bearing widget. The panel manages attachment and removal:
+this example creates an editor and passes changed text to an application callback.
 
 ```java
 CodeMirrorResources.whenReady(() -> {
@@ -243,7 +363,13 @@ The lower-level `Editor.mount` also accepts an Elemental2 `HTMLElement`.
 
 ### Read and change the document
 
+Use `getText()` when your application needs the current document, for example
+when a user presses Save. You can also change a range of text and select it from
+Java, which is useful for inserting a template or navigating to a reported problem.
+Here we start with a greeting, replace its second word and select the replacement:
+
 ```java
+editor.setText("Hello there");
 String text = editor.getText();
 editor.replace(6, 11, "World");
 editor.setSelection(new Selection(6, 11));
@@ -260,6 +386,11 @@ Ranges refer to the original document and must be ordered and non-overlapping.
 and `redoDepth()` to work with the history.
 
 ### Respond to changes
+
+An update listener lets your application react while the user works. For example,
+it can mark a form as modified or arrange for validation of the new text. Check
+`documentChanged()` when you only care about content, because moving the selection
+also produces updates.
 
 ```java
 Subscription subscription = editor.onUpdate(update -> {
@@ -278,9 +409,11 @@ or disposal after the callback returns, using GWT `Scheduler.get().scheduleDefer
 
 ### Configure editing and search
 
-Language configurations include Java, JavaScript, TypeScript, JSON, HTML, CSS,
-Python and plain text. Light and One Dark themes are bundled. Changing language,
-theme, tab size or wrapping preserves the document, selection and history.
+Choose a language to give the editor the syntax support appropriate to the
+content being edited. The bundled configurations include Java, JavaScript,
+TypeScript, JSON, HTML, CSS, Python and plain text. Light and One Dark themes are
+bundled. Changing language, theme, tab size or wrapping preserves the document,
+selection and history.
 
 ```java
 editor.setTabSize(4);
@@ -290,7 +423,9 @@ editor.setReadOnly(true);
 
 Read-only disables user edits; application code can still update the document.
 
-For a literal search with case-sensitive matching:
+Your application can drive search from its own controls, or open CodeMirror's
+built-in search/replace panel. For example, this code sets a case-sensitive literal
+query and moves to its next match:
 
 ```java
 if (editor.setSearch("World", true, false)) {
@@ -303,6 +438,13 @@ The third argument enables regular expressions. Invalid or empty queries return
 `openSearchPanel()` opens the search/replace UI; `closeSearchPanel()` closes it.
 
 ### Supply completion results
+
+A Java completion provider lets you offer suggestions from your application's
+own vocabulary, such as template variables or configuration keys. CodeMirror
+handles showing the suggestions and inserting the chosen text. Your provider
+supplies the proposals and the document range they replace.
+
+This small example offers a single Java statement at the current word:
 
 ```java
 editor.setCompletionSource(context -> new CompletionResult(
@@ -321,8 +463,13 @@ word characters and `$`; supply your own range for other identifier rules.
 
 ### Supply diagnostics
 
-Record the document revision when starting analysis, then publish results for
-that revision:
+Diagnostics let your application show validation results beside the text they
+refer to. Your own validator or service decides what is wrong and supplies a
+message, severity and range; CodeMirror displays the result in the editor.
+
+Validation can finish after the user has typed more text. Record the document
+revision before starting analysis, then pass it back with the results so that
+warnings for an older document are not applied to a newer one:
 
 ```java
 int revision = editor.revision();
@@ -339,6 +486,10 @@ their meaning becomes stale. `clearDiagnostics()` removes them and
 `diagnosticCount()` reports their number.
 
 ### Dispose of the editor
+
+When your screen owns an `Editor` directly, it also owns its lifetime. Close any
+listener you no longer need, and close the editor before removing its container.
+A `CodeMirrorWidget` performs editor disposal when the widget is detached.
 
 ```java
 subscription.close();
@@ -360,20 +511,30 @@ on GWT 2.13.1 and TeaVM, covering sizing, events, handler removal and reattachme
 The GWT build also checks editing, selection, history, search, diagnostics and
 Java completion. TeaVM tests run in both standard and optimized builds.
 
-Multi-selection creation, asynchronous completion, LSP transport, snippet
-placeholders, diagnostic fixes, custom syntax parsers are not implemented. JVM editing and WebAssembly are outside the validated scope.
+The typed Java API does not yet cover creating multiple selections, asynchronous
+completion, snippet placeholders, diagnostic fixes or custom syntax parsers. There
+is also no built-in connection to a language server through LSP. JVM editing and
+WebAssembly are outside the validated scope.
 
-For native extensions, `setExtensions(Object)` replaces a dedicated extension
-compartment and `nativeView()` exposes the underlying `EditorView`. The bundle
-exports `CodeMirrorTea.state` and `CodeMirrorTea.view` for extensions that need
-the same module instances. These APIs bypass Java validation. Avoid loading a
-second copy of those CodeMirror modules; keep disposal and dispatch owned by the
-Java wrapper.
+If your application needs a CodeMirror extension beyond the typed API, it can
+supply native extension objects through `setExtensions(Object)`. That method
+replaces the extensions in a dedicated part of the editor's configuration;
+`nativeView()` exposes the underlying CodeMirror `EditorView` for direct access.
+This requires working with CodeMirror's JavaScript API and bypasses the Java
+wrapper's validation.
+
+The bundle exports `CodeMirrorTea.state` and `CodeMirrorTea.view` so such
+extensions can use the same CodeMirror module instances as the editor. Avoid
+loading a second copy of those modules, and let the Java wrapper continue to
+manage editor disposal and updates.
 
 ## Build
 
-Use JDK 21 and Maven 3.9+, with the matching Instanto TeaVM parent and compiler
-artifacts installed. With the project's Playwright browsers available:
+To build the library from source, use JDK 21 and Maven 3.9+, with the matching
+Instanto TeaVM parent and compiler artifacts installed. Verification compiles the
+Java API for both targets and exercises it in real browsers. With the project's
+Playwright browsers available, run the standard build and then the optimized
+TeaVM build:
 
 ```sh
 mvn clean verify
@@ -387,8 +548,10 @@ browser engines are exercised by the build.
 [The build workflow](.github/workflows/build.yml) records browser installation
 and verification for both compiler targets.
 
-Node 22+ is needed only to regenerate the committed assets:
-`npm ci && npm run build`; `npm run check:assets` checks their reproducibility.
+The prebuilt editor bundle is committed to this repository and included in the
+WebJar. If you change the browser integration or its bundled dependencies, use
+Node 22+ and run `npm ci && npm run build` to regenerate it.
+`npm run check:assets` checks that the committed bundle can be reproduced.
 
 ## Assets and licenses
 
