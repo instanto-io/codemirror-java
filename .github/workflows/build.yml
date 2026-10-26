@@ -54,6 +54,7 @@ jobs:
         with:
           name: browser-verification
           path: |
+            codemirror-gwt-tests/target/failsafe-reports/
             codemirror-showcase/target/failsafe-reports/
             codemirror-showcase/target/*.png
       - name: Upload verified showcase

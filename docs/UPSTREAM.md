@@ -11,9 +11,11 @@ manifests/license files. Wrapper release numbers are not CodeMirror versions.
 
 No related TeaVM CodeMirror repository was found in the organization or the
 GitHub repository search. Local matching assets belonged to older applications.
-AceTea, TeaLeaf, and teavm-compat were read-only references for the organization
-Maven parent, WebJar staging, Java-driven showcases, browser tests, and explicit
-resource ownership. This repository does not modify or depend on their editor APIs.
+The Java API is shared between modern GWT and TeaVM. The GWT artifact packages
+the canonical Java/JsInterop sources. The TeaVM artifact uses teavm-compat's
+source adapter, GWT widgets and Elemental2 implementations. The editor lifecycle,
+value events and handler removal follow GWT conventions; the editor operations
+follow CodeMirror 6. No historical wrapper source was copied.
 
 ## CodeMirror 6 architecture
 

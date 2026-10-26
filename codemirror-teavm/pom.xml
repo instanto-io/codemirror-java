@@ -8,9 +8,11 @@
   </parent>
   <artifactId>codemirror-teavm</artifactId>
   <dependencies>
+    <dependency><groupId>io.instanto</groupId><artifactId>gwt-user-compat</artifactId><version>0.1.0-SNAPSHOT</version></dependency>
     <dependency>
-      <groupId>org.teavm</groupId>
-      <artifactId>teavm-jso-apis</artifactId>
+      <groupId>io.instanto</groupId>
+      <artifactId>elemental2-compat</artifactId>
+      <version>1.2.3-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>io.instanto</groupId>
@@ -19,6 +21,17 @@
     </dependency>
   </dependencies>
   <build>
+    <sourceDirectory>${project.build.directory}/teavm-sources</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>io.instanto</groupId>
+        <artifactId>gwt-resources-compat-maven-plugin</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <executions><execution><goals><goal>adapt-sources</goal></goals>
+          <configuration><sourceRoot>${project.basedir}/src/main/java</sourceRoot></configuration>
+        </execution></executions>
+      </plugin>
+    </plugins>
     <resources>
       <resource>
         <directory>src/main/resources</directory>

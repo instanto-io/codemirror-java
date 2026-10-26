@@ -23,7 +23,7 @@
     <dependency>
       <groupId>com.microsoft.playwright</groupId>
       <artifactId>playwright</artifactId>
-      <version>1.55.0</version>
+      <version>1.56.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -35,6 +35,7 @@
   </dependencies>
   <build>
     <plugins>
+      <plugin><groupId>org.codehaus.mojo</groupId><artifactId>build-helper-maven-plugin</artifactId><version>3.6.1</version><executions><execution><id>shared-widget-contracts</id><phase>generate-sources</phase><goals><goal>add-source</goal></goals><configuration><sources><source>../codemirror-gwt-tests/src/main/java</source></sources></configuration></execution></executions></plugin>
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.9.0</version>

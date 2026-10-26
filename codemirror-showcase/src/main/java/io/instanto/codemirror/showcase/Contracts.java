@@ -9,11 +9,13 @@ final class Contracts {
   private Contracts() {}
 
   static void run() {
+    io.instanto.codemirror.testing.client.WidgetChecks.run();
     var parent = HTMLDocument.current().createElement("div");
     HTMLDocument.current().getBody().appendChild(parent);
     Editor editor =
         Editor.mount(
-            parent, new EditorOptions("a😀b\nsecond", Language.JAVA, Theme.LIGHT, false, 4, false));
+            jsinterop.base.Js.<elemental2.dom.HTMLElement>uncheckedCast(parent),
+            new EditorOptions("a😀b\nsecond", Language.JAVA, Theme.LIGHT, false, 4, false));
     try {
       check(editor.length() == 11, "UTF-16 length");
       editor.setSelection(new Selection(3, 1));
@@ -97,9 +99,13 @@ final class Contracts {
       check(editor.setSearch("\\n", true, false) && editor.findNext(), "literal backslash search");
       check(editor.getSelectedText().equals("\\n"), "literal does not interpret escapes");
       editor.setExtensions(testExtension());
-      check(hasTestAttribute(editor.nativeView()), "custom extension applied");
+      check(
+          hasTestAttribute(jsinterop.base.Js.uncheckedCast(editor.nativeView())),
+          "custom extension applied");
       editor.setExtensions(emptyExtensions());
-      check(!hasTestAttribute(editor.nativeView()), "custom extension removed");
+      check(
+          !hasTestAttribute(jsinterop.base.Js.uncheckedCast(editor.nativeView())),
+          "custom extension removed");
       editor.setCompletionSource(null);
       editor.focus();
       editor.requestMeasure();
@@ -118,7 +124,8 @@ final class Contracts {
       }
       check(parent.getChildNodes().getLength() == 0, "view DOM removed");
       for (int i = 0; i < 3; i++) {
-        var fresh = Editor.mount(parent);
+        var fresh =
+            Editor.mount(jsinterop.base.Js.<elemental2.dom.HTMLElement>uncheckedCast(parent));
         fresh.setText("fresh");
         check(fresh.undoDepth() == 1, "fresh history");
         fresh.close();

@@ -119,7 +119,7 @@ public final class Showcase {
   private static void mount(String text) {
     editor =
         Editor.mount(
-            el("editor"),
+            jsinterop.base.Js.<elemental2.dom.HTMLElement>uncheckedCast(el("editor")),
             new EditorOptions(text, language, dark ? Theme.DARK : Theme.LIGHT, readOnly, 4, false));
     editor.setCompletionSource(
         context -> {
@@ -147,7 +147,7 @@ public final class Showcase {
                   "Offset " + update.selection().head() + " · revision " + update.revision());
         });
     el("position").setTextContent("Offset 0 · revision 0");
-    expose(editor.nativeView());
+    expose(jsinterop.base.Js.uncheckedCast(editor.nativeView()));
   }
 
   static HTMLElement el(String id) {

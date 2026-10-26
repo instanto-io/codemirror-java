@@ -2,3 +2,4 @@
 codemirror-webjar/src/main/resources/META-INF/resources/webjars/**/codemirror-teavm.js linguist-generated=true
 # Preserve upstream-generated whitespace and verbatim dependency license files.
 codemirror-webjar/src/main/resources/META-INF/resources/webjars/** -whitespace
+codemirror-showcase/src/main/webapp/legal/runtime/** -text -whitespace

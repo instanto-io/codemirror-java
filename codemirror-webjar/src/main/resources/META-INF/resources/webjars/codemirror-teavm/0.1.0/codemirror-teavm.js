@@ -20,17 +20,34 @@ var CodeMirrorTea = (() => {
   // browser/editor.js
   var editor_exports = {};
   __export(editor_exports, {
+    anchor: () => anchor,
     apiVersion: () => apiVersion,
+    array: () => array,
+    available: () => available,
     command: () => command2,
+    completion: () => completion,
     completions: () => completions,
     configure: () => configure,
     count: () => count,
     create: () => create,
     destroy: () => destroy,
+    diagnostic: () => diagnostic,
     diagnostics: () => diagnostics,
+    edit: () => edit,
     edits: () => edits,
+    focus: () => focus,
+    hasFocus: () => hasFocus,
+    head: () => head,
+    length: () => length,
+    measure: () => measure,
+    nativeView: () => nativeView,
+    push: () => push,
+    result: () => result,
+    revision: () => revision,
     search: () => search2,
+    select: () => select,
     state: () => dist_exports,
+    text: () => text,
     view: () => dist_exports2
   });
 
@@ -219,7 +236,7 @@ var CodeMirrorTea = (() => {
     /**
     Replace a range of the text with the given content.
     */
-    replace(from, to, text) {
+    replace(from, to, text2) {
       [from, to] = clip(this, from, to);
       let parts = [];
       this.decompose(
@@ -229,10 +246,10 @@ var CodeMirrorTea = (() => {
         2
         /* Open.To */
       );
-      if (text.length)
-        text.decompose(
+      if (text2.length)
+        text2.decompose(
           0,
-          text.length,
+          text2.length,
           parts,
           1 | 2
           /* Open.To */
@@ -244,7 +261,7 @@ var CodeMirrorTea = (() => {
         1
         /* Open.From */
       );
-      return TextNode.from(parts, this.length - (to - from) + text.length);
+      return TextNode.from(parts, this.length - (to - from) + text2.length);
     }
     /**
     Append another document to this one.
@@ -340,19 +357,19 @@ var CodeMirrorTea = (() => {
     /**
     Create a `Text` instance for the given array of lines.
     */
-    static of(text) {
-      if (text.length == 0)
+    static of(text2) {
+      if (text2.length == 0)
         throw new RangeError("A document must have at least one line");
-      if (text.length == 1 && !text[0])
+      if (text2.length == 1 && !text2[0])
         return _Text.empty;
-      return text.length <= 32 ? new TextLeaf(text) : TextNode.from(TextLeaf.split(text, []));
+      return text2.length <= 32 ? new TextLeaf(text2) : TextNode.from(TextLeaf.split(text2, []));
     }
   };
   var TextLeaf = class _TextLeaf extends Text {
-    constructor(text, length = textLength(text)) {
+    constructor(text2, length2 = textLength(text2)) {
       super();
-      this.text = text;
-      this.length = length;
+      this.text = text2;
+      this.length = length2;
     }
     get lines() {
       return this.text.length;
@@ -370,42 +387,42 @@ var CodeMirrorTea = (() => {
       }
     }
     decompose(from, to, target, open) {
-      let text = from <= 0 && to >= this.length ? this : new _TextLeaf(sliceText(this.text, from, to), Math.min(to, this.length) - Math.max(0, from));
+      let text2 = from <= 0 && to >= this.length ? this : new _TextLeaf(sliceText(this.text, from, to), Math.min(to, this.length) - Math.max(0, from));
       if (open & 1) {
         let prev = target.pop();
-        let joined = appendText(text.text, prev.text.slice(), 0, text.length);
+        let joined = appendText(text2.text, prev.text.slice(), 0, text2.length);
         if (joined.length <= 32) {
-          target.push(new _TextLeaf(joined, prev.length + text.length));
+          target.push(new _TextLeaf(joined, prev.length + text2.length));
         } else {
           let mid = joined.length >> 1;
           target.push(new _TextLeaf(joined.slice(0, mid)), new _TextLeaf(joined.slice(mid)));
         }
       } else {
-        target.push(text);
+        target.push(text2);
       }
     }
-    replace(from, to, text) {
-      if (!(text instanceof _TextLeaf))
-        return super.replace(from, to, text);
+    replace(from, to, text2) {
+      if (!(text2 instanceof _TextLeaf))
+        return super.replace(from, to, text2);
       [from, to] = clip(this, from, to);
-      let lines = appendText(this.text, appendText(text.text, sliceText(this.text, 0, from)), to);
-      let newLen = this.length + text.length - (to - from);
+      let lines = appendText(this.text, appendText(text2.text, sliceText(this.text, 0, from)), to);
+      let newLen = this.length + text2.length - (to - from);
       if (lines.length <= 32)
         return new _TextLeaf(lines, newLen);
       return TextNode.from(_TextLeaf.split(lines, []), newLen);
     }
     sliceString(from, to = this.length, lineSep = "\n") {
       [from, to] = clip(this, from, to);
-      let result = "";
+      let result2 = "";
       for (let pos = 0, i2 = 0; pos <= to && i2 < this.text.length; i2++) {
         let line = this.text[i2], end = pos + line.length;
         if (pos > from && i2)
-          result += lineSep;
+          result2 += lineSep;
         if (from < end && to > pos)
-          result += line.slice(Math.max(0, from - pos), to - pos);
+          result2 += line.slice(Math.max(0, from - pos), to - pos);
         pos = end + 1;
       }
-      return result;
+      return result2;
     }
     flatten(target) {
       for (let line of this.text)
@@ -414,9 +431,9 @@ var CodeMirrorTea = (() => {
     scanIdentical() {
       return 0;
     }
-    static split(text, target) {
+    static split(text2, target) {
       let part = [], len = -1;
-      for (let line of text) {
+      for (let line of text2) {
         part.push(line);
         len += line.length + 1;
         if (part.length == 32) {
@@ -431,10 +448,10 @@ var CodeMirrorTea = (() => {
     }
   };
   var TextNode = class _TextNode extends Text {
-    constructor(children, length) {
+    constructor(children, length2) {
       super();
       this.children = children;
-      this.length = length;
+      this.length = length2;
       this.lines = 0;
       for (let child of children)
         this.lines += child.lines;
@@ -461,37 +478,37 @@ var CodeMirrorTea = (() => {
         pos = end + 1;
       }
     }
-    replace(from, to, text) {
+    replace(from, to, text2) {
       [from, to] = clip(this, from, to);
-      if (text.lines < this.lines)
+      if (text2.lines < this.lines)
         for (let i2 = 0, pos = 0; i2 < this.children.length; i2++) {
           let child = this.children[i2], end = pos + child.length;
           if (from >= pos && to <= end) {
-            let updated = child.replace(from - pos, to - pos, text);
+            let updated = child.replace(from - pos, to - pos, text2);
             let totalLines = this.lines - child.lines + updated.lines;
             if (updated.lines < totalLines >> 5 - 1 && updated.lines > totalLines >> 5 + 1) {
               let copy = this.children.slice();
               copy[i2] = updated;
-              return new _TextNode(copy, this.length - (to - from) + text.length);
+              return new _TextNode(copy, this.length - (to - from) + text2.length);
             }
             return super.replace(pos, end, updated);
           }
           pos = end + 1;
         }
-      return super.replace(from, to, text);
+      return super.replace(from, to, text2);
     }
     sliceString(from, to = this.length, lineSep = "\n") {
       [from, to] = clip(this, from, to);
-      let result = "";
+      let result2 = "";
       for (let i2 = 0, pos = 0; i2 < this.children.length && pos <= to; i2++) {
         let child = this.children[i2], end = pos + child.length;
         if (pos > from && i2)
-          result += lineSep;
+          result2 += lineSep;
         if (from < end && to > pos)
-          result += child.sliceString(from - pos, to - pos, lineSep);
+          result2 += child.sliceString(from - pos, to - pos, lineSep);
         pos = end + 1;
       }
-      return result;
+      return result2;
     }
     flatten(target) {
       for (let child of this.children)
@@ -500,18 +517,18 @@ var CodeMirrorTea = (() => {
     scanIdentical(other, dir) {
       if (!(other instanceof _TextNode))
         return 0;
-      let length = 0;
+      let length2 = 0;
       let [iA, iB, eA, eB] = dir > 0 ? [0, 0, this.children.length, other.children.length] : [this.children.length - 1, other.children.length - 1, -1, -1];
       for (; ; iA += dir, iB += dir) {
         if (iA == eA || iB == eB)
-          return length;
+          return length2;
         let chA = this.children[iA], chB = other.children[iB];
         if (chA != chB)
-          return length + chA.scanIdentical(chB, dir);
-        length += chA.length + 1;
+          return length2 + chA.scanIdentical(chB, dir);
+        length2 += chA.length + 1;
       }
     }
-    static from(children, length = children.reduce((l, ch) => l + ch.length + 1, -1)) {
+    static from(children, length2 = children.reduce((l, ch) => l + ch.length + 1, -1)) {
       let lines = 0;
       for (let ch of children)
         lines += ch.lines;
@@ -519,7 +536,7 @@ var CodeMirrorTea = (() => {
         let flat = [];
         for (let ch of children)
           ch.flatten(flat);
-        return new TextLeaf(flat, length);
+        return new TextLeaf(flat, length2);
       }
       let chunk = Math.max(
         32,
@@ -557,19 +574,19 @@ var CodeMirrorTea = (() => {
       for (let child of children)
         add2(child);
       flush();
-      return chunked.length == 1 ? chunked[0] : new _TextNode(chunked, length);
+      return chunked.length == 1 ? chunked[0] : new _TextNode(chunked, length2);
     }
   };
   Text.empty = /* @__PURE__ */ new TextLeaf([""], 0);
-  function textLength(text) {
-    let length = -1;
-    for (let line of text)
-      length += line.length + 1;
-    return length;
+  function textLength(text2) {
+    let length2 = -1;
+    for (let line of text2)
+      length2 += line.length + 1;
+    return length2;
   }
-  function appendText(text, target, from = 0, to = 1e9) {
-    for (let pos = 0, i2 = 0, first = true; i2 < text.length && pos <= to; i2++) {
-      let line = text[i2], end = pos + line.length;
+  function appendText(text2, target, from = 0, to = 1e9) {
+    for (let pos = 0, i2 = 0, first = true; i2 < text2.length && pos <= to; i2++) {
+      let line = text2[i2], end = pos + line.length;
       if (end >= from) {
         if (end > to)
           line = line.slice(0, to - pos);
@@ -585,17 +602,17 @@ var CodeMirrorTea = (() => {
     }
     return target;
   }
-  function sliceText(text, from, to) {
-    return appendText(text, [""], from, to);
+  function sliceText(text2, from, to) {
+    return appendText(text2, [""], from, to);
   }
   var RawTextCursor = class {
-    constructor(text, dir = 1) {
+    constructor(text2, dir = 1) {
       this.dir = dir;
       this.done = false;
       this.lineBreak = false;
       this.value = "";
-      this.nodes = [text];
-      this.offsets = [dir > 0 ? 1 : (text instanceof TextLeaf ? text.text.length : text.children.length) << 1];
+      this.nodes = [text2];
+      this.offsets = [dir > 0 ? 1 : (text2 instanceof TextLeaf ? text2.text.length : text2.children.length) << 1];
     }
     nextInner(skip, dir) {
       this.done = this.lineBreak = false;
@@ -652,11 +669,11 @@ var CodeMirrorTea = (() => {
     }
   };
   var PartialTextCursor = class {
-    constructor(text, start, end) {
+    constructor(text2, start, end) {
       this.value = "";
       this.done = false;
-      this.cursor = new RawTextCursor(text, start > end ? -1 : 1);
-      this.pos = start > end ? text.length : 0;
+      this.cursor = new RawTextCursor(text2, start > end ? -1 : 1);
+      this.pos = start > end ? text2.length : 0;
       this.from = Math.min(start, end);
       this.to = Math.max(start, end);
     }
@@ -732,11 +749,11 @@ var CodeMirrorTea = (() => {
     /**
     @internal
     */
-    constructor(from, to, number2, text) {
+    constructor(from, to, number2, text2) {
       this.from = from;
       this.to = to;
       this.number = number2;
-      this.text = text;
+      this.text = text2;
     }
     /**
     The length of the line (not including any line break after it).
@@ -745,9 +762,9 @@ var CodeMirrorTea = (() => {
       return this.to - this.from;
     }
   };
-  function clip(text, from, to) {
-    from = Math.max(0, Math.min(text.length, from));
-    return [from, Math.max(from, Math.min(text.length, to))];
+  function clip(text2, from, to) {
+    from = Math.max(0, Math.min(text2.length, from));
+    return [from, Math.max(from, Math.min(text2.length, to))];
   }
   function findClusterBreak2(str, pos, forward = true, includeExtending = true) {
     return findClusterBreak(str, pos, forward, includeExtending);
@@ -800,21 +817,21 @@ var CodeMirrorTea = (() => {
     The length of the document before the change.
     */
     get length() {
-      let result = 0;
+      let result2 = 0;
       for (let i2 = 0; i2 < this.sections.length; i2 += 2)
-        result += this.sections[i2];
-      return result;
+        result2 += this.sections[i2];
+      return result2;
     }
     /**
     The length of the document after the change.
     */
     get newLength() {
-      let result = 0;
+      let result2 = 0;
       for (let i2 = 0; i2 < this.sections.length; i2 += 2) {
         let ins = this.sections[i2 + 1];
-        result += ins < 0 ? this.sections[i2] : ins;
+        result2 += ins < 0 ? this.sections[i2] : ins;
       }
-      return result;
+      return result2;
     }
     /**
     False when there are actual changes in this set.
@@ -924,12 +941,12 @@ var CodeMirrorTea = (() => {
     @internal
     */
     toString() {
-      let result = "";
+      let result2 = "";
       for (let i2 = 0; i2 < this.sections.length; ) {
         let len = this.sections[i2++], ins = this.sections[i2++];
-        result += (result ? " " : "") + len + (ins >= 0 ? ":" + ins : "");
+        result2 += (result2 ? " " : "") + len + (ins >= 0 ? ":" + ins : "");
       }
-      return result;
+      return result2;
     }
     /**
     Serialize this change desc to a JSON-representable value.
@@ -965,7 +982,7 @@ var CodeMirrorTea = (() => {
     apply(doc2) {
       if (this.length != doc2.length)
         throw new RangeError("Applying change set to a document with the wrong length");
-      iterChanges(this, (fromA, toA, fromB, _toB, text) => doc2 = doc2.replace(fromB, fromB + (toA - fromA), text), false);
+      iterChanges(this, (fromA, toA, fromB, _toB, text2) => doc2 = doc2.replace(fromB, fromB + (toA - fromA), text2), false);
       return doc2;
     }
     mapDesc(other, before = false) {
@@ -1093,14 +1110,14 @@ var CodeMirrorTea = (() => {
     Create a change set for the given changes, for a document of the
     given length, using `lineSep` as line separator.
     */
-    static of(changes, length, lineSep) {
+    static of(changes, length2, lineSep) {
       let sections = [], inserted = [], pos = 0;
       let total = null;
       function flush(force = false) {
         if (!force && !sections.length)
           return;
-        if (pos < length)
-          addSection(sections, length - pos, -1);
+        if (pos < length2)
+          addSection(sections, length2 - pos, -1);
         let set = new _ChangeSet(sections, inserted);
         total = total ? total.compose(set.map(total)) : set;
         sections = [];
@@ -1112,14 +1129,14 @@ var CodeMirrorTea = (() => {
           for (let sub of spec)
             process2(sub);
         } else if (spec instanceof _ChangeSet) {
-          if (spec.length != length)
-            throw new RangeError(`Mismatched change set length (got ${spec.length}, expected ${length})`);
+          if (spec.length != length2)
+            throw new RangeError(`Mismatched change set length (got ${spec.length}, expected ${length2})`);
           flush();
           total = total ? total.compose(spec.map(total)) : spec;
         } else {
           let { from, to = from, insert: insert2 } = spec;
-          if (from > to || from < 0 || to > length)
-            throw new RangeError(`Invalid change range ${from} to ${to} (in doc of length ${length})`);
+          if (from > to || from < 0 || to > length2)
+            throw new RangeError(`Invalid change range ${from} to ${to} (in doc of length ${length2})`);
           let insText = !insert2 ? Text.empty : typeof insert2 == "string" ? Text.of(insert2.split(lineSep || DefaultSplit)) : insert2;
           let insLen = insText.length;
           if (from == to && insLen == 0)
@@ -1140,8 +1157,8 @@ var CodeMirrorTea = (() => {
     /**
     Create an empty changeset of the given length.
     */
-    static empty(length) {
-      return new _ChangeSet(length ? [length, -1] : [], []);
+    static empty(length2) {
+      return new _ChangeSet(length2 ? [length2, -1] : [], []);
     }
     /**
     Create a changeset from its JSON representation (as produced by
@@ -1209,18 +1226,18 @@ var CodeMirrorTea = (() => {
         posA += len;
         posB += len;
       } else {
-        let endA = posA, endB = posB, text = Text.empty;
+        let endA = posA, endB = posB, text2 = Text.empty;
         for (; ; ) {
           endA += len;
           endB += ins;
           if (ins && inserted)
-            text = text.append(inserted[i2 - 2 >> 1]);
+            text2 = text2.append(inserted[i2 - 2 >> 1]);
           if (individual || i2 == desc.sections.length || desc.sections[i2 + 1] < 0)
             break;
           len = desc.sections[i2++];
           ins = desc.sections[i2++];
         }
-        f(posA, endA, posB, endB, text);
+        f(posA, endA, posB, endB, text2);
         posA = endA;
         posB = endB;
       }
@@ -1442,8 +1459,8 @@ var CodeMirrorTea = (() => {
     extend(from, to = from, assoc = 0) {
       if (from <= this.anchor && to >= this.anchor)
         return EditorSelection.range(from, to, void 0, void 0, assoc);
-      let head = Math.abs(from - this.anchor) > Math.abs(to - this.anchor) ? from : to;
-      return EditorSelection.range(this.anchor, head, void 0, void 0, assoc);
+      let head2 = Math.abs(from - this.anchor) > Math.abs(to - this.anchor) ? from : to;
+      return EditorSelection.range(this.anchor, head2, void 0, void 0, assoc);
     }
     /**
     Compare this range to another range.
@@ -1549,8 +1566,8 @@ var CodeMirrorTea = (() => {
     /**
     Create a selection holding a single range.
     */
-    static single(anchor, head = anchor) {
-      return new _EditorSelection([_EditorSelection.range(anchor, head)], 0);
+    static single(anchor2, head2 = anchor2) {
+      return new _EditorSelection([_EditorSelection.range(anchor2, head2)], 0);
     }
     /**
     Sort and merge the given set of ranges, creating a valid
@@ -1577,13 +1594,13 @@ var CodeMirrorTea = (() => {
     /**
     Create a selection range.
     */
-    static range(anchor, head, goalColumn, bidiLevel, assoc) {
+    static range(anchor2, head2, goalColumn, bidiLevel, assoc) {
       let flags = bidiLevel == null ? 7 : Math.min(6, bidiLevel);
-      if (!assoc && anchor != head)
-        assoc = head < anchor ? 1 : -1;
+      if (!assoc && anchor2 != head2)
+        assoc = head2 < anchor2 ? 1 : -1;
       if (assoc)
         flags |= assoc < 0 ? 8 : 16;
-      return head < anchor ? SelectionRange.create(head, anchor, flags | 32, goalColumn) : SelectionRange.create(anchor, head, flags, goalColumn);
+      return head2 < anchor2 ? SelectionRange.create(head2, anchor2, flags | 32, goalColumn) : SelectionRange.create(anchor2, head2, flags, goalColumn);
     }
     /**
     Create an [undirectional](https://codemirror.net/6/docs/ref/#state.SelectionRange.undirectional)
@@ -2016,16 +2033,16 @@ var CodeMirrorTea = (() => {
     }
   };
   function flatten(extension, compartments, newCompartments) {
-    let result = [[], [], [], [], []];
+    let result2 = [[], [], [], [], []];
     let seen = /* @__PURE__ */ new Map();
     function inner(ext, prec2) {
       let known = seen.get(ext);
       if (known != null) {
         if (known <= prec2)
           return;
-        let found = result[known].indexOf(ext);
+        let found = result2[known].indexOf(ext);
         if (found > -1)
-          result[known].splice(found, 1);
+          result2[known].splice(found, 1);
         if (ext instanceof CompartmentInstance)
           newCompartments.delete(ext.compartment);
       }
@@ -2042,11 +2059,11 @@ var CodeMirrorTea = (() => {
       } else if (ext instanceof PrecExtension) {
         inner(ext.inner, ext.prec);
       } else if (ext instanceof StateField) {
-        result[prec2].push(ext);
+        result2[prec2].push(ext);
         if (ext.provides)
           inner(ext.provides, prec2);
       } else if (ext instanceof FacetProvider) {
-        result[prec2].push(ext);
+        result2[prec2].push(ext);
         if (ext.facet.extensions)
           inner(ext.facet.extensions, Prec_.default);
       } else {
@@ -2059,7 +2076,7 @@ var CodeMirrorTea = (() => {
       }
     }
     inner(extension, Prec_.default);
-    return result.reduce((a, b) => a.concat(b));
+    return result2.reduce((a, b) => a.concat(b));
   }
   function ensureAddr(state, addr) {
     if (addr & 1)
@@ -2169,13 +2186,13 @@ var CodeMirrorTea = (() => {
     static mapEffects(effects, mapping) {
       if (!effects.length)
         return effects;
-      let result = [];
+      let result2 = [];
       for (let effect of effects) {
         let mapped = effect.map(mapping);
         if (mapped)
-          result.push(mapped);
+          result2.push(mapped);
       }
-      return result;
+      return result2;
     }
   };
   StateEffect.reconfigure = /* @__PURE__ */ StateEffect.define();
@@ -2273,7 +2290,7 @@ var CodeMirrorTea = (() => {
   Transaction.addToHistory = /* @__PURE__ */ Annotation.define();
   Transaction.remote = /* @__PURE__ */ Annotation.define();
   function joinRanges(a, b) {
-    let result = [];
+    let result2 = [];
     for (let iA = 0, iB = 0; ; ) {
       let from, to;
       if (iA < a.length && (iB == b.length || b[iB] >= a[iA])) {
@@ -2283,11 +2300,11 @@ var CodeMirrorTea = (() => {
         from = b[iB++];
         to = b[iB++];
       } else
-        return result;
-      if (!result.length || result[result.length - 1] < from)
-        result.push(from, to);
-      else if (result[result.length - 1] < to)
-        result[result.length - 1] = to;
+        return result2;
+      if (!result2.length || result2[result2.length - 1] < from)
+        result2.push(from, to);
+      else if (result2[result2.length - 1] < to)
+        result2[result2.length - 1] = to;
     }
   }
   function mergeTransaction(a, b, sequential) {
@@ -2337,23 +2354,23 @@ var CodeMirrorTea = (() => {
   }
   function filterTransaction(tr) {
     let state = tr.startState;
-    let result = true;
+    let result2 = true;
     for (let filter of state.facet(changeFilter)) {
       let value = filter(tr);
       if (value === false) {
-        result = false;
+        result2 = false;
         break;
       }
       if (Array.isArray(value))
-        result = result === true ? value : joinRanges(result, value);
+        result2 = result2 === true ? value : joinRanges(result2, value);
     }
-    if (result !== true) {
+    if (result2 !== true) {
       let changes, back;
-      if (result === false) {
+      if (result2 === false) {
         back = tr.changes.invertedDesc;
         changes = ChangeSet.empty(state.doc.length);
       } else {
-        let filtered = tr.changes.filter(result);
+        let filtered = tr.changes.filter(result2);
         changes = filtered.changes;
         back = filtered.filtered.mapDesc(filtered.changes).invertedDesc;
       }
@@ -2496,12 +2513,12 @@ var CodeMirrorTea = (() => {
     Create a [transaction spec](https://codemirror.net/6/docs/ref/#state.TransactionSpec) that
     replaces every selection range with the given content.
     */
-    replaceSelection(text) {
-      if (typeof text == "string")
-        text = this.toText(text);
+    replaceSelection(text2) {
+      if (typeof text2 == "string")
+        text2 = this.toText(text2);
       return this.changeByRange((range) => ({
-        changes: { from: range.from, to: range.to, insert: text },
-        range: EditorSelection.cursor(range.from + text.length, -1)
+        changes: { from: range.from, to: range.to, insert: text2 },
+        range: EditorSelection.cursor(range.from + text2.length, -1)
       }));
     }
     /**
@@ -2521,14 +2538,14 @@ var CodeMirrorTea = (() => {
       let changes = this.changes(result1.changes), ranges = [result1.range];
       let effects = asArray(result1.effects);
       for (let i2 = 1; i2 < sel.ranges.length; i2++) {
-        let result = f(sel.ranges[i2]);
-        let newChanges = this.changes(result.changes), newMapped = newChanges.map(changes);
+        let result2 = f(sel.ranges[i2]);
+        let newChanges = this.changes(result2.changes), newMapped = newChanges.map(changes);
         for (let j = 0; j < i2; j++)
           ranges[j] = ranges[j].map(newMapped);
         let mapBy = changes.mapDesc(newChanges, true);
-        ranges.push(result.range.map(mapBy));
+        ranges.push(result2.range.map(mapBy));
         changes = changes.compose(newMapped);
-        effects = StateEffect.mapEffects(effects, newMapped).concat(StateEffect.mapEffects(asArray(result.effects), mapBy));
+        effects = StateEffect.mapEffects(effects, newMapped).concat(StateEffect.mapEffects(asArray(result2.effects), mapBy));
       }
       return {
         changes,
@@ -2577,7 +2594,7 @@ var CodeMirrorTea = (() => {
     not use `doc` or `selection`) to fields.
     */
     toJSON(fields) {
-      let result = {
+      let result2 = {
         doc: this.sliceDoc(),
         selection: this.selection.toJSON()
       };
@@ -2585,9 +2602,9 @@ var CodeMirrorTea = (() => {
         for (let prop in fields) {
           let value = fields[prop];
           if (value instanceof StateField && this.config.address[value.id] != null)
-            result[prop] = value.spec.toJSON(this.field(fields[prop]), this);
+            result2[prop] = value.spec.toJSON(this.field(fields[prop]), this);
         }
-      return result;
+      return result2;
     }
     /**
     Deserialize a state from its JSON representation. When custom
@@ -2691,9 +2708,9 @@ var CodeMirrorTea = (() => {
     languageDataAt(name2, pos, side = -1) {
       let values2 = [];
       for (let provider of this.facet(languageData)) {
-        for (let result of provider(this, pos, side)) {
-          if (Object.prototype.hasOwnProperty.call(result, name2))
-            values2.push(result[name2]);
+        for (let result2 of provider(this, pos, side)) {
+          if (Object.prototype.hasOwnProperty.call(result2, name2))
+            values2.push(result2[name2]);
         }
       }
       return values2;
@@ -2720,18 +2737,18 @@ var CodeMirrorTea = (() => {
     this returns null.
     */
     wordAt(pos) {
-      let { text, from, length } = this.doc.lineAt(pos);
+      let { text: text2, from, length: length2 } = this.doc.lineAt(pos);
       let cat = this.charCategorizer(pos);
       let start = pos - from, end = pos - from;
       while (start > 0) {
-        let prev = findClusterBreak2(text, start, false);
-        if (cat(text.slice(prev, start)) != CharCategory.Word)
+        let prev = findClusterBreak2(text2, start, false);
+        if (cat(text2.slice(prev, start)) != CharCategory.Word)
           break;
         start = prev;
       }
-      while (end < length) {
-        let next = findClusterBreak2(text, end);
-        if (cat(text.slice(end, next)) != CharCategory.Word)
+      while (end < length2) {
+        let next = findClusterBreak2(text2, end);
+        if (cat(text2.slice(end, next)) != CharCategory.Word)
           break;
         end = next;
       }
@@ -2756,22 +2773,22 @@ var CodeMirrorTea = (() => {
   EditorState.transactionExtender = transactionExtender;
   Compartment.reconfigure = /* @__PURE__ */ StateEffect.define();
   function combineConfig(configs, defaults3, combine = {}) {
-    let result = {};
+    let result2 = {};
     for (let config2 of configs)
       for (let key of Object.keys(config2)) {
-        let value = config2[key], current = result[key];
+        let value = config2[key], current = result2[key];
         if (current === void 0)
-          result[key] = value;
+          result2[key] = value;
         else if (current === value || value === void 0) ;
         else if (Object.hasOwnProperty.call(combine, key))
-          result[key] = combine[key](current, value);
+          result2[key] = combine[key](current, value);
         else
           throw new Error("Config merge conflict for field " + key);
       }
     for (let key in defaults3)
-      if (result[key] === void 0)
-        result[key] = defaults3[key];
-    return result;
+      if (result2[key] === void 0)
+        result2[key] = defaults3[key];
+    return result2;
   }
   var RangeValue = class {
     /**
@@ -3051,7 +3068,7 @@ var CodeMirrorTea = (() => {
       let sharedChunks = findSharedChunks(a, b, textDiff);
       let sideA = new SpanCursor(a, sharedChunks, minPointSize);
       let sideB = new SpanCursor(b, sharedChunks, minPointSize);
-      textDiff.iterGaps((fromA, fromB, length) => compare(sideA, fromA, sideB, fromB, length, comparator));
+      textDiff.iterGaps((fromA, fromB, length2) => compare(sideA, fromA, sideB, fromB, length2, comparator));
       if (textDiff.empty && textDiff.length == 0)
         compare(sideA, 0, sideB, 0, 0, comparator);
     }
@@ -3125,12 +3142,12 @@ var CodeMirrorTea = (() => {
     static join(sets) {
       if (!sets.length)
         return _RangeSet.empty;
-      let result = last(sets);
+      let result2 = last(sets);
       for (let i2 = sets.length - 2; i2 >= 0; i2--) {
         for (let layer2 = sets[i2]; layer2 != _RangeSet.empty; layer2 = layer2.nextLayer)
-          result = new _RangeSet(layer2.chunkPos, layer2.chunk, result, Math.max(layer2.maxPoint, result.maxPoint));
+          result2 = new _RangeSet(layer2.chunkPos, layer2.chunk, result2, Math.max(layer2.maxPoint, result2.maxPoint));
       }
-      return result;
+      return result2;
     }
   };
   RangeSet.empty = /* @__PURE__ */ new RangeSet([], [], null, -1);
@@ -3247,9 +3264,9 @@ var CodeMirrorTea = (() => {
         this.finishChunk(false);
       if (this.chunks.length == 0)
         return next;
-      let result = RangeSet.create(this.chunkPos, this.chunks, this.nextLayer ? this.nextLayer.finishInner(next) : next, this.setMaxPoint);
+      let result2 = RangeSet.create(this.chunkPos, this.chunks, this.nextLayer ? this.nextLayer.finishInner(next) : next, this.setMaxPoint);
       this.from = null;
-      return result;
+      return result2;
     }
   };
   function findSharedChunks(a, b, textDiff) {
@@ -3525,10 +3542,10 @@ var CodeMirrorTea = (() => {
       return open;
     }
   };
-  function compare(a, startA, b, startB, length, comparator) {
+  function compare(a, startA, b, startB, length2, comparator) {
     a.goto(startA);
     b.goto(startB);
-    let endB = startB + length;
+    let endB = startB + length2;
     let pos = startB, dPos = startB - startA;
     let bounds = !!comparator.boundChange;
     for (let boundChange = false; ; ) {
@@ -3566,22 +3583,22 @@ var CodeMirrorTea = (() => {
         return false;
     return true;
   }
-  function remove(array, index) {
-    for (let i2 = index, e = array.length - 1; i2 < e; i2++)
-      array[i2] = array[i2 + 1];
-    array.pop();
+  function remove(array2, index) {
+    for (let i2 = index, e = array2.length - 1; i2 < e; i2++)
+      array2[i2] = array2[i2 + 1];
+    array2.pop();
   }
-  function insert(array, index, value) {
-    for (let i2 = array.length - 1; i2 >= index; i2--)
-      array[i2 + 1] = array[i2];
-    array[index] = value;
+  function insert(array2, index, value) {
+    for (let i2 = array2.length - 1; i2 >= index; i2--)
+      array2[i2 + 1] = array2[i2];
+    array2[index] = value;
   }
-  function findMinIndex(value, array) {
+  function findMinIndex(value, array2) {
     let found = -1, foundPos = 1e9;
-    for (let i2 = 0; i2 < array.length; i2++)
-      if ((array[i2] - foundPos || value[i2].endSide - value[found].endSide) < 0) {
+    for (let i2 = 0; i2 < array2.length; i2++)
+      if ((array2[i2] - foundPos || value[i2].endSide - value[found].endSide) < 0) {
         found = i2;
-        foundPos = array[i2];
+        foundPos = array2[i2];
       }
     return found;
   }
@@ -3730,10 +3747,10 @@ var CodeMirrorTea = (() => {
           root.adoptedStyleSheets = [this.sheet, ...root.adoptedStyleSheets];
       } else {
         if (changed) {
-          let text = "";
+          let text2 = "";
           for (let i2 = 0; i2 < this.modules.length; i2++)
-            text += this.modules[i2].getRules() + "\n";
-          this.styleTag.textContent = text;
+            text2 += this.modules[i2].getRules() + "\n";
+          this.styleTag.textContent = text2;
         }
         let target = root.head || root;
         if (this.styleTag.parentNode != target)
@@ -4644,10 +4661,10 @@ var CodeMirrorTea = (() => {
   var LTR = Direction.LTR;
   var RTL = Direction.RTL;
   function dec(str) {
-    let result = [];
+    let result2 = [];
     for (let i2 = 0; i2 < str.length; i2++)
-      result.push(1 << +str[i2]);
-    return result;
+      result2.push(1 << +str[i2]);
+    return result2;
   }
   var LowTypes = /* @__PURE__ */ dec("88888888888888888888888888888888888666888888787833333333337888888000000000000000000000000008888880000000000000000000000000088888888888888888888888888888888888887866668888088888663380888308888800000000000000000000000800000000000000000000000000000008");
   var ArabicTypes = /* @__PURE__ */ dec("4444448826627288999999999992222222222222222222222222222222222222222222222229999999999999999999994444444444644222822222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222999999949999999229989999223333333333");
@@ -4964,8 +4981,8 @@ var CodeMirrorTea = (() => {
     computeSectionOrder(line, level, level, isolates, 0, line.length, order);
     return order;
   }
-  function trivialOrder(length) {
-    return [new BidiSpan(0, length, 0)];
+  function trivialOrder(length2) {
+    return [new BidiSpan(0, length2, 0)];
   }
   var movedOver = "";
   function moveVisually(line, order, dir, start, forward) {
@@ -5006,9 +5023,9 @@ var CodeMirrorTea = (() => {
     }
     return EditorSelection.cursor(nextIndex + line.from, span.forward(forward, dir) ? -1 : 1, span.level);
   }
-  function autoDirection(text, from, to) {
+  function autoDirection(text2, from, to) {
     for (let i2 = from; i2 < to; i2++) {
-      let type = charType(text.charCodeAt(i2));
+      let type = charType(text2.charCodeAt(i2));
       if (type == 1)
         return LTR;
       if (type == 2 || type == 4)
@@ -5176,13 +5193,13 @@ var CodeMirrorTea = (() => {
     if (!isolates.length)
       return isolates;
     let sets = isolates.map((i2) => i2 instanceof Function ? i2(view) : i2);
-    let result = [];
+    let result2 = [];
     RangeSet.spans(sets, line.from, line.to, {
       point() {
       },
       span(fromDoc, toDoc, active, open) {
         let from = fromDoc - line.from, to = toDoc - line.from;
-        let level = result;
+        let level = result2;
         for (let i2 = active.length - 1; i2 >= 0; i2--, open--) {
           let direction = active[i2].spec.bidiIsolate, update;
           if (open > 0 && level.length && (update = level[level.length - 1]).to == from && update.direction == direction) {
@@ -5196,14 +5213,14 @@ var CodeMirrorTea = (() => {
         }
       }
     });
-    return resolveIsolates(line.text, result);
+    return resolveIsolates(line.text, result2);
   }
-  function resolveIsolates(text, isolates) {
+  function resolveIsolates(text2, isolates) {
     for (let i2 of isolates) {
       if (i2.direction == null) {
         for (let pos = i2.from, j = 0; pos < i2.to; j++) {
           let nextInner = j < i2.inner.length ? i2.inner[j] : null;
-          let dir = autoDirection(text, pos, nextInner ? nextInner.from : i2.to);
+          let dir = autoDirection(text2, pos, nextInner ? nextInner.from : i2.to);
           if (dir) {
             i2.direction = dir;
             break;
@@ -5215,7 +5232,7 @@ var CodeMirrorTea = (() => {
         if (i2.direction == null)
           i2.direction = Direction.LTR;
       }
-      resolveIsolates(text, i2.inner);
+      resolveIsolates(text2, i2.inner);
     }
     return isolates;
   }
@@ -5270,7 +5287,7 @@ var CodeMirrorTea = (() => {
     static extendWithRanges(diff, ranges) {
       if (ranges.length == 0)
         return diff;
-      let result = [];
+      let result2 = [];
       for (let dI = 0, rI = 0, off = 0; ; ) {
         let nextD = dI < diff.length ? diff[dI].fromB : 1e9;
         let nextR = rI < ranges.length ? ranges[rI] : 1e9;
@@ -5295,9 +5312,9 @@ var CodeMirrorTea = (() => {
             break;
           }
         }
-        result.push(new _ChangedRange(fromA, toA, fromB, toB));
+        result2.push(new _ChangedRange(fromA, toA, fromB, toB));
       }
-      return result;
+      return result2;
     }
   };
   var ViewUpdate = class _ViewUpdate {
@@ -5378,9 +5395,9 @@ var CodeMirrorTea = (() => {
   };
   var noChildren = [];
   var Tile = class {
-    constructor(dom, length, flags = 0) {
+    constructor(dom, length2, flags = 0) {
       this.dom = dom;
-      this.length = length;
+      this.length = length2;
       this.flags = flags;
       this.parent = null;
       dom.cmTile = this;
@@ -5504,10 +5521,10 @@ var CodeMirrorTea = (() => {
       super.sync(track);
       let parent = this.dom, prev = null, next;
       let tracking = (track === null || track === void 0 ? void 0 : track.node) == parent ? track : null;
-      let length = 0;
+      let length2 = 0;
       for (let child of this.children) {
         child.sync(track);
-        length += child.length + child.breakAfter;
+        length2 += child.length + child.breakAfter;
         next = prev ? prev.nextSibling : parent.firstChild;
         if (tracking && next != child.dom)
           tracking.written = true;
@@ -5524,7 +5541,7 @@ var CodeMirrorTea = (() => {
         tracking.written = true;
       while (next)
         next = rm$1(next);
-      this.length = length;
+      this.length = length2;
     }
   };
   function rm$1(dom) {
@@ -5573,9 +5590,9 @@ var CodeMirrorTea = (() => {
             i2 = 0;
           } else {
             let end = pos + next.length;
-            let result = f(next, pos);
-            if (result !== void 0)
-              return result;
+            let result2 = f(next, pos);
+            if (result2 !== void 0)
+              return result2;
             pos = end + next.breakAfter;
           }
         }
@@ -5732,9 +5749,9 @@ var CodeMirrorTea = (() => {
     }
   };
   var TextTile = class _TextTile extends Tile {
-    constructor(dom, text) {
-      super(dom, text.length);
-      this.text = text;
+    constructor(dom, text2) {
+      super(dom, text2.length);
+      this.text = text2;
     }
     sync(track) {
       if (this.flags & 2)
@@ -5753,16 +5770,16 @@ var CodeMirrorTea = (() => {
       return JSON.stringify(this.text);
     }
     coordsIn(pos, side, rtl) {
-      let length = this.dom.nodeValue.length;
-      if (pos > length)
-        pos = length;
+      let length2 = this.dom.nodeValue.length;
+      if (pos > length2)
+        pos = length2;
       let from = pos, to = pos, flatten2 = 0;
-      if (pos == 0 && side < 0 || pos == length && side >= 0) {
+      if (pos == 0 && side < 0 || pos == length2 && side >= 0) {
         if (!(browser.chrome || browser.gecko)) {
           if (pos) {
             from--;
             flatten2 = 1;
-          } else if (to < length) {
+          } else if (to < length2) {
             to++;
             flatten2 = -1;
           }
@@ -5770,7 +5787,7 @@ var CodeMirrorTea = (() => {
       } else {
         if (side < 0)
           from--;
-        else if (to < length)
+        else if (to < length2)
           to++;
       }
       let rects = textRange(this.dom, from, to).getClientRects();
@@ -5781,16 +5798,16 @@ var CodeMirrorTea = (() => {
         rect = Array.prototype.find.call(rects, (r) => r.width) || rect;
       return rtl == null ? rect : flattenRect(rect, (flatten2 ? flatten2 > 0 : side < 0) == rtl);
     }
-    static of(text, dom) {
-      let tile = new _TextTile(dom || document.createTextNode(text), text);
+    static of(text2, dom) {
+      let tile = new _TextTile(dom || document.createTextNode(text2), text2);
       if (!dom)
         tile.flags |= 2;
       return tile;
     }
   };
   var WidgetTile = class _WidgetTile extends Tile {
-    constructor(dom, length, widget, flags) {
-      super(dom, length, flags);
+    constructor(dom, length2, widget, flags) {
+      super(dom, length2, flags);
       this.widget = widget;
     }
     isWidget() {
@@ -5839,13 +5856,13 @@ var CodeMirrorTea = (() => {
       super.destroy();
       this.widget.destroy(this.dom);
     }
-    static of(widget, view, length, flags, dom) {
+    static of(widget, view, length2, flags, dom) {
       if (!dom) {
         dom = widget.toDOM(view);
         if (!widget.editable)
           dom.contentEditable = "false";
       }
-      return new _WidgetTile(dom, length, widget, flags);
+      return new _WidgetTile(dom, length2, widget, flags);
     }
   };
   var WidgetBufferTile = class extends Tile {
@@ -5955,23 +5972,23 @@ var CodeMirrorTea = (() => {
       this.wrappers = [];
       this.wrapperPos = 0;
     }
-    addText(text, marks2, openStart, tile) {
+    addText(text2, marks2, openStart, tile) {
       var _a2;
       this.flushBuffer();
       let parent = this.ensureMarks(marks2, openStart);
       let prev = parent.lastChild;
-      if (prev && prev.isText() && !(prev.flags & 8) && prev.length + text.length < 512) {
+      if (prev && prev.isText() && !(prev.flags & 8) && prev.length + text2.length < 512) {
         this.cache.reused.set(
           prev,
           2
           /* Reused.DOM */
         );
-        let tile2 = parent.children[parent.children.length - 1] = new TextTile(prev.dom, prev.text + text);
+        let tile2 = parent.children[parent.children.length - 1] = new TextTile(prev.dom, prev.text + text2);
         tile2.parent = parent;
       } else {
-        parent.append(tile || TextTile.of(text, (_a2 = this.cache.find(TextTile)) === null || _a2 === void 0 ? void 0 : _a2.dom));
+        parent.append(tile || TextTile.of(text2, (_a2 = this.cache.find(TextTile)) === null || _a2 === void 0 ? void 0 : _a2.dom));
       }
-      this.pos += text.length;
+      this.pos += text2.length;
       this.afterWidget = null;
     }
     addComposition(composition, context) {
@@ -5984,14 +6001,14 @@ var CodeMirrorTea = (() => {
           /* Reused.DOM */
         );
       }
-      let head = line;
+      let head2 = line;
       for (let i2 = context.marks.length - 1; i2 >= 0; i2--) {
         let mark = context.marks[i2];
-        let last2 = head.lastChild;
+        let last2 = head2.lastChild;
         if (last2 instanceof MarkTile && last2.mark.eq(mark.mark)) {
           if (last2.dom != mark.dom)
             last2.setDOM(freeNode(mark.dom));
-          head = last2;
+          head2 = last2;
         } else {
           let { dom } = mark;
           if (this.cache.reused.get(mark)) {
@@ -6000,8 +6017,8 @@ var CodeMirrorTea = (() => {
               dom = freeNode(mark.dom);
           }
           let nw = MarkTile.of(mark.mark, dom);
-          head.append(nw);
-          head = nw;
+          head2.append(nw);
+          head2 = nw;
         }
         this.cache.reused.set(
           mark,
@@ -6016,10 +6033,10 @@ var CodeMirrorTea = (() => {
           2
           /* Reused.DOM */
         );
-      let text = new TextTile(composition.text, composition.text.nodeValue);
-      text.flags |= 8;
+      let text2 = new TextTile(composition.text, composition.text.nodeValue);
+      text2.flags |= 8;
       this.pos = composition.range.toB;
-      head.append(text);
+      head2.append(text2);
     }
     addInlineWidget(widget, marks2, openStart) {
       let noSpace = this.afterWidget && widget.flags & 48 && (this.afterWidget.flags & 48) == (widget.flags & 48);
@@ -6045,10 +6062,10 @@ var CodeMirrorTea = (() => {
       this.lastBlock = widget;
       this.endLine();
     }
-    continueWidget(length) {
+    continueWidget(length2) {
       let widget = this.afterWidget || this.lastBlock;
-      widget.length += length;
-      this.pos += length;
+      widget.length += length2;
+      this.pos += length2;
     }
     addLineStart(attrs, dom) {
       var _a2;
@@ -6238,7 +6255,7 @@ var CodeMirrorTea = (() => {
       }
       return null;
     }
-    findWidget(widget, length, flags) {
+    findWidget(widget, length2, flags) {
       let widgets = this.buckets[0];
       if (widgets.length)
         for (let i2 = 0, pass = 0; ; i2++) {
@@ -6253,7 +6270,7 @@ var CodeMirrorTea = (() => {
             widgets.splice(i2, 1);
             if (i2 < this.index[0])
               this.index[0]--;
-            if (tile.widget == widget && tile.length == length && (tile.flags & (496 | 1)) == flags) {
+            if (tile.widget == widget && tile.length == length2 && (tile.flags & (496 | 1)) == flags) {
               this.reused.set(
                 tile,
                 1
@@ -6266,7 +6283,7 @@ var CodeMirrorTea = (() => {
                 2
                 /* Reused.DOM */
               );
-              return new WidgetTile(tile.dom, length, widget, tile.flags & -498 | flags);
+              return new WidgetTile(tile.dom, length2, widget, tile.flags & -498 | flags);
             }
           }
         }
@@ -6352,9 +6369,9 @@ var CodeMirrorTea = (() => {
         this.builder.endLine();
       return this.builder.root;
     }
-    preserve(length, incStart, incEnd) {
+    preserve(length2, incStart, incEnd) {
       let activeMarks = getMarks(this.old), openMarks = this.openMarks;
-      this.old.advance(length, incEnd ? 1 : -1, {
+      this.old.advance(length2, incEnd ? 1 : -1, {
         skip: (tile, from, to) => {
           if (tile.isWidget()) {
             if (this.openWidget) {
@@ -6427,7 +6444,7 @@ var CodeMirrorTea = (() => {
           this.openWidget = false;
         }
       });
-      this.text.skip(length);
+      this.text.skip(length2);
     }
     emit(from, to) {
       let pendingLineAttrs = null;
@@ -6496,9 +6513,9 @@ var CodeMirrorTea = (() => {
         this.old.advance(5, side, this.reuseWalker);
       }
     }
-    getCompositionContext(text) {
+    getCompositionContext(text2) {
       let marks2 = [], line = null;
-      for (let parent = text.parentNode; ; parent = parent.parentNode) {
+      for (let parent = text2.parentNode; ; parent = parent.parentNode) {
         let tile = Tile.get(parent);
         if (parent == this.view.contentDOM)
           break;
@@ -6713,21 +6730,21 @@ var CodeMirrorTea = (() => {
         return;
       let force = this.forceSelection;
       this.forceSelection = false;
-      let main = this.view.state.selection.main, anchor, head;
+      let main = this.view.state.selection.main, anchor2, head2;
       if (main.empty) {
-        head = anchor = this.inlineDOMNearPos(main.anchor, main.assoc || 1);
+        head2 = anchor2 = this.inlineDOMNearPos(main.anchor, main.assoc || 1);
       } else {
-        head = this.inlineDOMNearPos(main.head, main.head == main.from ? 1 : -1);
-        anchor = this.inlineDOMNearPos(main.anchor, main.anchor == main.from ? 1 : -1);
+        head2 = this.inlineDOMNearPos(main.head, main.head == main.from ? 1 : -1);
+        anchor2 = this.inlineDOMNearPos(main.anchor, main.anchor == main.from ? 1 : -1);
       }
-      if (browser.gecko && main.empty && !this.hasComposition && betweenUneditable(anchor)) {
+      if (browser.gecko && main.empty && !this.hasComposition && betweenUneditable(anchor2)) {
         let dummy = document.createTextNode("");
-        this.view.observer.ignore(() => anchor.node.insertBefore(dummy, anchor.node.childNodes[anchor.offset] || null));
-        anchor = head = new DOMPos(dummy, 0);
+        this.view.observer.ignore(() => anchor2.node.insertBefore(dummy, anchor2.node.childNodes[anchor2.offset] || null));
+        anchor2 = head2 = new DOMPos(dummy, 0);
         force = true;
       }
       let domSel = this.view.observer.selectionRange;
-      if (force || !domSel.focusNode || (!isEquivalentPosition(anchor.node, anchor.offset, domSel.anchorNode, domSel.anchorOffset) || !isEquivalentPosition(head.node, head.offset, domSel.focusNode, domSel.focusOffset)) && !this.suppressWidgetCursorChange(domSel, main)) {
+      if (force || !domSel.focusNode || (!isEquivalentPosition(anchor2.node, anchor2.offset, domSel.anchorNode, domSel.anchorOffset) || !isEquivalentPosition(head2.node, head2.offset, domSel.focusNode, domSel.focusOffset)) && !this.suppressWidgetCursorChange(domSel, main)) {
         this.view.observer.ignore(() => {
           if (browser.android && browser.chrome && dom.contains(domSel.focusNode) && inUneditable(domSel.focusNode, dom)) {
             dom.blur();
@@ -6737,28 +6754,28 @@ var CodeMirrorTea = (() => {
           if (!rawSel) ;
           else if (main.empty) {
             if (browser.gecko) {
-              let nextTo = nextToUneditable(anchor.node, anchor.offset);
+              let nextTo = nextToUneditable(anchor2.node, anchor2.offset);
               if (nextTo && nextTo != (1 | 2)) {
-                let text = (nextTo == 1 ? textNodeBefore : textNodeAfter)(anchor.node, anchor.offset);
-                if (text)
-                  anchor = new DOMPos(text.node, text.offset);
+                let text2 = (nextTo == 1 ? textNodeBefore : textNodeAfter)(anchor2.node, anchor2.offset);
+                if (text2)
+                  anchor2 = new DOMPos(text2.node, text2.offset);
               }
             }
-            rawSel.collapse(anchor.node, anchor.offset);
+            rawSel.collapse(anchor2.node, anchor2.offset);
             if (main.bidiLevel != null && rawSel.caretBidiLevel !== void 0)
               rawSel.caretBidiLevel = main.bidiLevel;
           } else if (rawSel.extend) {
-            rawSel.collapse(anchor.node, anchor.offset);
+            rawSel.collapse(anchor2.node, anchor2.offset);
             try {
-              rawSel.extend(head.node, head.offset);
+              rawSel.extend(head2.node, head2.offset);
             } catch (_) {
             }
           } else {
             let range = document.createRange();
             if (main.anchor > main.head)
-              [anchor, head] = [head, anchor];
-            range.setEnd(head.node, head.offset);
-            range.setStart(anchor.node, anchor.offset);
+              [anchor2, head2] = [head2, anchor2];
+            range.setEnd(head2.node, head2.offset);
+            range.setStart(anchor2.node, anchor2.offset);
             rawSel.removeAllRanges();
             rawSel.addRange(range);
           }
@@ -6768,10 +6785,10 @@ var CodeMirrorTea = (() => {
               activeElt.focus();
           }
         });
-        this.view.observer.setSelectionRange(anchor, head);
+        this.view.observer.setSelectionRange(anchor2, head2);
       }
-      this.impreciseAnchor = anchor.precise ? null : new DOMPos(domSel.anchorNode, domSel.anchorOffset);
-      this.impreciseHead = head.precise ? null : new DOMPos(domSel.focusNode, domSel.focusOffset);
+      this.impreciseAnchor = anchor2.precise ? null : new DOMPos(domSel.anchorNode, domSel.anchorOffset);
+      this.impreciseHead = head2.precise ? null : new DOMPos(domSel.focusNode, domSel.focusOffset);
     }
     // If a zero-length widget is inserted next to the cursor during
     // composition, avoid moving it across it and disrupting the
@@ -6936,7 +6953,7 @@ var CodeMirrorTea = (() => {
       return scan(tile, offset);
     }
     measureVisibleLineHeights(viewport) {
-      let result = [], { from, to } = viewport;
+      let result2 = [], { from, to } = viewport;
       let contentWidth = this.view.contentDOM.clientWidth;
       let isWider = contentWidth > Math.max(this.view.scrollDOM.clientWidth, this.minWidth) + 1;
       let widest = -1, ltr = this.view.textDirection == Direction.LTR;
@@ -6954,8 +6971,8 @@ var CodeMirrorTea = (() => {
               scan(child, pos, childRect);
           } else if (pos >= from) {
             if (spaceAbove > 0)
-              result.push(-spaceAbove);
-            result.push(height + spaceAbove);
+              result2.push(-spaceAbove);
+            result2.push(height + spaceAbove);
             spaceAbove = 0;
             if (isWider) {
               let last2 = child.dom.lastChild;
@@ -6978,7 +6995,7 @@ var CodeMirrorTea = (() => {
         }
       };
       scan(this.tile, 0, null);
-      return result;
+      return result2;
     }
     textDirectionAt(pos) {
       let { tile } = this.tile.resolveBlock(pos, 1);
@@ -7159,10 +7176,10 @@ var CodeMirrorTea = (() => {
     let found = findCompositionNode(view, headPos);
     if (!found)
       return null;
-    let { node: textNode, from, to } = found, text = textNode.nodeValue;
-    if (/[\n\r]/.test(text))
+    let { node: textNode, from, to } = found, text2 = textNode.nodeValue;
+    if (/[\n\r]/.test(text2))
       return null;
-    if (view.state.doc.sliceString(found.from, found.to) != text)
+    if (view.state.doc.sliceString(found.from, found.to) != text2)
       return null;
     let inv = changes.invertedDesc;
     return { range: new ChangedRange(inv.mapPos(from), inv.mapPos(to), from, to), text: textNode };
@@ -7635,8 +7652,8 @@ var CodeMirrorTea = (() => {
       this.text = "";
       this.lineSeparator = view.state.facet(EditorState.lineSeparator);
     }
-    append(text) {
-      this.text += text;
+    append(text2) {
+      this.text += text2;
     }
     lineBreak() {
       this.text += LineBreakPlaceholder;
@@ -7664,20 +7681,20 @@ var CodeMirrorTea = (() => {
       return this;
     }
     readTextNode(node) {
-      let text = node.nodeValue;
+      let text2 = node.nodeValue;
       for (let point of this.points)
         if (point.node == node)
-          point.pos = this.text.length + Math.min(point.offset, text.length);
+          point.pos = this.text.length + Math.min(point.offset, text2.length);
       for (let off = 0, re = this.lineSeparator ? null : /\r\n?|\n/g; ; ) {
         let nextBreak = -1, breakSize = 1, m;
         if (this.lineSeparator) {
-          nextBreak = text.indexOf(this.lineSeparator, off);
+          nextBreak = text2.indexOf(this.lineSeparator, off);
           breakSize = this.lineSeparator.length;
-        } else if (m = re.exec(text)) {
+        } else if (m = re.exec(text2)) {
           nextBreak = m.index;
           breakSize = m[0].length;
         }
-        this.append(text.slice(off, nextBreak < 0 ? text.length : nextBreak));
+        this.append(text2.slice(off, nextBreak < 0 ? text2.length : nextBreak));
         if (nextBreak < 0)
           break;
         this.lineBreak();
@@ -7714,10 +7731,10 @@ var CodeMirrorTea = (() => {
         if (point.node == node && node.childNodes[point.offset] == next)
           point.pos = this.text.length;
     }
-    findPointInside(node, length) {
+    findPointInside(node, length2) {
       for (let point of this.points)
         if (isText(node) ? point.node == node : node.contains(point.node))
-          point.pos = this.text.length + (isAtEnd(node, point.node, point.offset) ? length : 0);
+          point.pos = this.text.length + (isAtEnd(node, point.node, point.offset) ? length2 : 0);
     }
   };
   function isAtEnd(parent, node, offset) {
@@ -7773,26 +7790,26 @@ var CodeMirrorTea = (() => {
         this.newSel = selectionFromPoints(selPoints, this.bounds.from);
       } else {
         let domSel = view.observer.selectionRange;
-        let head = iHead && iHead.node == domSel.focusNode && iHead.offset == domSel.focusOffset || !contains(view.contentDOM, domSel.focusNode) ? curSel.main.head : view.docView.posFromDOM(domSel.focusNode, domSel.focusOffset);
-        let anchor = iAnchor && iAnchor.node == domSel.anchorNode && iAnchor.offset == domSel.anchorOffset || !contains(view.contentDOM, domSel.anchorNode) ? curSel.main.anchor : view.docView.posFromDOM(domSel.anchorNode, domSel.anchorOffset);
+        let head2 = iHead && iHead.node == domSel.focusNode && iHead.offset == domSel.focusOffset || !contains(view.contentDOM, domSel.focusNode) ? curSel.main.head : view.docView.posFromDOM(domSel.focusNode, domSel.focusOffset);
+        let anchor2 = iAnchor && iAnchor.node == domSel.anchorNode && iAnchor.offset == domSel.anchorOffset || !contains(view.contentDOM, domSel.anchorNode) ? curSel.main.anchor : view.docView.posFromDOM(domSel.anchorNode, domSel.anchorOffset);
         let vp = view.viewport;
-        if ((browser.ios || browser.chrome) && head != anchor && Math.min(head, anchor) <= curSel.main.from && Math.max(head, anchor) >= curSel.main.to && (vp.from > 0 || vp.to < view.state.doc.length)) {
-          let from = Math.min(head, anchor), to = Math.max(head, anchor);
+        if ((browser.ios || browser.chrome) && head2 != anchor2 && Math.min(head2, anchor2) <= curSel.main.from && Math.max(head2, anchor2) >= curSel.main.to && (vp.from > 0 || vp.to < view.state.doc.length)) {
+          let from = Math.min(head2, anchor2), to = Math.max(head2, anchor2);
           let offFrom = vp.from - from, offTo = vp.to - to;
           if ((offFrom == 0 || offFrom == 1 || from == 0) && (offTo == 0 || offTo == -1 || to == view.state.doc.length)) {
-            head = 0;
-            anchor = view.state.doc.length;
+            head2 = 0;
+            anchor2 = view.state.doc.length;
           }
         }
         if (view.inputState.composing > -1 && curSel.ranges.length > 1) {
-          this.newSel = curSel.replaceRange(EditorSelection.range(anchor, head));
-        } else if (view.lineWrapping && anchor == head && !(curSel.main.empty && curSel.main.head == head) && view.inputState.lastTouchTime > Date.now() - 100) {
-          let before = view.coordsAtPos(head, -1), assoc = 0;
+          this.newSel = curSel.replaceRange(EditorSelection.range(anchor2, head2));
+        } else if (view.lineWrapping && anchor2 == head2 && !(curSel.main.empty && curSel.main.head == head2) && view.inputState.lastTouchTime > Date.now() - 100) {
+          let before = view.coordsAtPos(head2, -1), assoc = 0;
           if (before)
             assoc = view.inputState.lastTouchY <= before.bottom ? -1 : 1;
-          this.newSel = EditorSelection.create([EditorSelection.cursor(head, assoc)]);
+          this.newSel = EditorSelection.create([EditorSelection.cursor(head2, assoc)]);
         } else {
-          this.newSel = EditorSelection.single(anchor, head);
+          this.newSel = EditorSelection.single(anchor2, head2);
         }
       }
     }
@@ -7900,12 +7917,12 @@ var CodeMirrorTea = (() => {
     // after a completion when you press enter
     (change.from == sel.from || change.from == sel.from - 1 && view.state.sliceDoc(change.from, sel.from) == " ") && change.insert.length == 1 && change.insert.lines == 2 && dispatchKey(view.contentDOM, "Enter", 13) || (change.from == sel.from - 1 && change.to == sel.to && change.insert.length == 0 || lastKey == 8 && change.insert.length < change.to - change.from && change.to > sel.head) && dispatchKey(view.contentDOM, "Backspace", 8) || change.from == sel.from && change.to == sel.to + 1 && change.insert.length == 0 && dispatchKey(view.contentDOM, "Delete", 46)))
       return true;
-    let text = change.insert.toString();
+    let text2 = change.insert.toString();
     if (view.inputState.composing >= 0)
       view.inputState.composing++;
     let defaultTr;
     let defaultInsert = () => defaultTr || (defaultTr = applyDefaultInsert(view, change, newSel));
-    if (!view.state.facet(inputHandler).some((h) => h(view, change.from, change.to, text, defaultInsert)))
+    if (!view.state.facet(inputHandler).some((h) => h(view, change.from, change.to, text2, defaultInsert)))
       view.dispatch(defaultInsert());
     return true;
   }
@@ -8003,22 +8020,22 @@ var CodeMirrorTea = (() => {
     return { from, toA, toB };
   }
   function selectionPoints(view) {
-    let result = [];
+    let result2 = [];
     if (view.root.activeElement != view.contentDOM)
-      return result;
+      return result2;
     let { anchorNode, anchorOffset, focusNode, focusOffset } = view.observer.selectionRange;
     if (anchorNode) {
-      result.push(new DOMPoint(anchorNode, anchorOffset));
+      result2.push(new DOMPoint(anchorNode, anchorOffset));
       if (focusNode != anchorNode || focusOffset != anchorOffset)
-        result.push(new DOMPoint(focusNode, focusOffset));
+        result2.push(new DOMPoint(focusNode, focusOffset));
     }
-    return result;
+    return result2;
   }
   function selectionFromPoints(points, base2) {
     if (points.length == 0)
       return null;
-    let anchor = points[0].pos, head = points.length == 2 ? points[1].pos : anchor;
-    return anchor < 0 || head < 0 ? null : anchor == head ? EditorSelection.create([EditorSelection.cursor(head + base2, -1)]) : EditorSelection.single(anchor + base2, head + base2);
+    let anchor2 = points[0].pos, head2 = points.length == 2 ? points[1].pos : anchor2;
+    return anchor2 < 0 || head2 < 0 ? null : anchor2 == head2 ? EditorSelection.create([EditorSelection.cursor(head2 + base2, -1)]) : EditorSelection.single(anchor2 + base2, head2 + base2);
   }
   function sameSelPos(selection2, range) {
     return range.head == selection2.main.head && range.anchor == selection2.main.anchor;
@@ -8187,9 +8204,9 @@ var CodeMirrorTea = (() => {
     };
   }
   function computeHandlers(plugins) {
-    let result = /* @__PURE__ */ Object.create(null);
+    let result2 = /* @__PURE__ */ Object.create(null);
     function record(type) {
-      return result[type] || (result[type] = { observers: [], handlers: [] });
+      return result2[type] || (result2[type] = { observers: [], handlers: [] });
     }
     for (let plugin2 of plugins) {
       let spec = plugin2.spec, handlers2 = spec && spec.plugin.domEventHandlers, observers2 = spec && spec.plugin.domEventObservers;
@@ -8210,7 +8227,7 @@ var CodeMirrorTea = (() => {
       record(type).handlers.push(handlers[type]);
     for (let type in observers)
       record(type).observers.push(observers[type]);
-    return result;
+    return result2;
   }
   var PendingKeys = [
     { key: "Backspace", keyCode: 8, inputType: "deleteContentBackward" },
@@ -8376,16 +8393,16 @@ var CodeMirrorTea = (() => {
       doPaste(view, target.value);
     }, 50);
   }
-  function textFilter(state, facet, text) {
+  function textFilter(state, facet, text2) {
     for (let filter of state.facet(facet))
-      text = filter(text, state);
-    return text;
+      text2 = filter(text2, state);
+    return text2;
   }
   function doPaste(view, input) {
     input = textFilter(view.state, clipboardInputFilter, input);
-    let { state } = view, changes, i2 = 1, text = state.toText(input);
-    let byLine = text.lines == state.selection.ranges.length;
-    let linewise = lastLinewiseCopy != null && state.selection.ranges.every((r) => r.empty) && lastLinewiseCopy == text.toString();
+    let { state } = view, changes, i2 = 1, text2 = state.toText(input);
+    let byLine = text2.lines == state.selection.ranges.length;
+    let linewise = lastLinewiseCopy != null && state.selection.ranges.every((r) => r.empty) && lastLinewiseCopy == text2.toString();
     if (linewise) {
       let lastLine = -1;
       changes = state.changeByRange((range) => {
@@ -8393,7 +8410,7 @@ var CodeMirrorTea = (() => {
         if (line.from == lastLine)
           return { range };
         lastLine = line.from;
-        let insert2 = state.toText((byLine ? text.line(i2++).text : input) + state.lineBreak);
+        let insert2 = state.toText((byLine ? text2.line(i2++).text : input) + state.lineBreak);
         return {
           changes: { from: line.from, insert: insert2 },
           range: EditorSelection.cursor(range.from + insert2.length, -1)
@@ -8401,14 +8418,14 @@ var CodeMirrorTea = (() => {
       });
     } else if (byLine) {
       changes = state.changeByRange((range) => {
-        let line = text.line(i2++);
+        let line = text2.line(i2++);
         return {
           changes: { from: range.from, to: range.to, insert: line.text },
           range: EditorSelection.cursor(range.from + line.length, -1)
         };
       });
     } else {
-      changes = state.replaceSelection(text);
+      changes = state.replaceSelection(text2);
     }
     view.dispatch(changes, {
       userEvent: "input.paste",
@@ -8565,14 +8582,14 @@ var CodeMirrorTea = (() => {
     view.inputState.draggedContent = null;
     return false;
   };
-  function dropText(view, event, text, direct) {
-    text = textFilter(view.state, clipboardInputFilter, text);
-    if (!text)
+  function dropText(view, event, text2, direct) {
+    text2 = textFilter(view.state, clipboardInputFilter, text2);
+    if (!text2)
       return;
     let dropPos = view.posAtCoords({ x: event.clientX, y: event.clientY }, false);
     let { draggedContent } = view.inputState;
     let del = direct && draggedContent && dragMovesSelection(view, event) ? { from: draggedContent.from, to: draggedContent.to } : null;
-    let ins = { from: dropPos, insert: text };
+    let ins = { from: dropPos, insert: text2 };
     let changes = view.state.changes(del ? [del, ins] : ins);
     view.focus();
     view.dispatch({
@@ -8589,26 +8606,26 @@ var CodeMirrorTea = (() => {
       return true;
     let files = event.dataTransfer.files;
     if (files && files.length) {
-      let text = Array(files.length), read = 0;
+      let text2 = Array(files.length), read = 0;
       let finishFile = () => {
         if (++read == files.length)
-          dropText(view, event, text.filter((s) => s != null).join(view.state.lineBreak), false);
+          dropText(view, event, text2.filter((s) => s != null).join(view.state.lineBreak), false);
       };
       for (let i2 = 0; i2 < files.length; i2++) {
         let reader = new FileReader();
         reader.onerror = finishFile;
         reader.onload = () => {
           if (!/[\x00-\x08\x0e-\x1f]{2}/.test(reader.result))
-            text[i2] = reader.result;
+            text2[i2] = reader.result;
           finishFile();
         };
         reader.readAsText(files[i2]);
       }
       return true;
     } else {
-      let text = event.dataTransfer.getData("Text");
-      if (text) {
-        dropText(view, event, text, true);
+      let text2 = event.dataTransfer.getData("Text");
+      if (text2) {
+        dropText(view, event, text2, true);
         return true;
       }
     }
@@ -8627,15 +8644,15 @@ var CodeMirrorTea = (() => {
       return false;
     }
   };
-  function captureCopy(view, text) {
+  function captureCopy(view, text2) {
     let parent = view.dom.parentNode;
     if (!parent)
       return;
     let target = parent.appendChild(document.createElement("textarea"));
     target.style.cssText = "position: fixed; left: -10000px; top: 10px";
-    target.value = text;
+    target.value = text2;
     target.focus();
-    target.selectionEnd = text.length;
+    target.selectionEnd = text2.length;
     target.selectionStart = 0;
     setTimeout(() => {
       target.remove();
@@ -8667,10 +8684,10 @@ var CodeMirrorTea = (() => {
   handlers.copy = handlers.cut = (view, event) => {
     if (!hasSelection(view.contentDOM, view.observer.selectionRange))
       return false;
-    let { text, ranges, linewise } = copiedRange(view.state);
-    if (!text && !linewise)
+    let { text: text2, ranges, linewise } = copiedRange(view.state);
+    if (!text2 && !linewise)
       return false;
-    lastLinewiseCopy = linewise ? text : null;
+    lastLinewiseCopy = linewise ? text2 : null;
     if (event.type == "cut" && !view.state.readOnly)
       view.dispatch({
         changes: ranges,
@@ -8680,18 +8697,18 @@ var CodeMirrorTea = (() => {
     let data = brokenClipboardAPI ? null : event.clipboardData;
     if (data) {
       data.clearData();
-      data.setData("text/plain", text);
+      data.setData("text/plain", text2);
       return true;
     } else {
-      captureCopy(view, text);
+      captureCopy(view, text2);
       return false;
     }
   };
   var isFocusChange = /* @__PURE__ */ Annotation.define();
-  function focusChangeTransaction(state, focus) {
+  function focusChangeTransaction(state, focus2) {
     let effects = [];
     for (let getEffect of state.facet(focusChangeEffect)) {
-      let effect = getEffect(state, focus);
+      let effect = getEffect(state, focus2);
       if (effect)
         effects.push(effect);
     }
@@ -8699,9 +8716,9 @@ var CodeMirrorTea = (() => {
   }
   function updateForFocusChange(view) {
     setTimeout(() => {
-      let focus = view.hasFocus;
-      if (focus != view.inputState.notifiedFocused) {
-        let tr = focusChangeTransaction(view.state, focus);
+      let focus2 = view.hasFocus;
+      if (focus2 != view.inputState.notifiedFocused) {
+        let tr = focusChangeTransaction(view.state, focus2);
         if (tr)
           view.dispatch(tr);
         else
@@ -8766,11 +8783,11 @@ var CodeMirrorTea = (() => {
       view.inputState.insertingTextAt = Date.now();
     }
     if (event.inputType == "insertReplacementText" && view.observer.editContext) {
-      let text = (_a2 = event.dataTransfer) === null || _a2 === void 0 ? void 0 : _a2.getData("text/plain"), ranges = event.getTargetRanges();
-      if (text && ranges.length) {
+      let text2 = (_a2 = event.dataTransfer) === null || _a2 === void 0 ? void 0 : _a2.getData("text/plain"), ranges = event.getTargetRanges();
+      if (text2 && ranges.length) {
         let r = ranges[0];
         let from = view.posAtDOM(r.startContainer, r.startOffset), to = view.posAtDOM(r.endContainer, r.endOffset);
-        applyDOMChangeInner(view, { from, to, insert: view.state.toText(text) }, null);
+        applyDOMChangeInner(view, { from, to, insert: view.state.toText(text2) }, null);
         return true;
       }
     }
@@ -8827,10 +8844,10 @@ var CodeMirrorTea = (() => {
         lines += Math.max(0, Math.ceil((to - from - lines * this.lineLength * 0.5) / this.lineLength));
       return this.lineHeight * lines;
     }
-    heightForLine(length) {
+    heightForLine(length2) {
       if (!this.lineWrapping)
         return this.lineHeight;
-      let lines = 1 + Math.max(0, Math.ceil((length - this.lineLength) / Math.max(1, this.lineLength - 5)));
+      let lines = 1 + Math.max(0, Math.ceil((length2 - this.lineLength) / Math.max(1, this.lineLength - 5)));
       return lines * this.lineHeight;
     }
     setDoc(doc2) {
@@ -8888,9 +8905,9 @@ var CodeMirrorTea = (() => {
     /**
     @internal
     */
-    constructor(from, length, top2, height, _content) {
+    constructor(from, length2, top2, height, _content) {
       this.from = from;
-      this.length = length;
+      this.length = length2;
       this.top = top2;
       this.height = height;
       this._content = _content;
@@ -8944,8 +8961,8 @@ var CodeMirrorTea = (() => {
   })(QueryType || (QueryType = {}));
   var Epsilon = 1e-3;
   var HeightMap = class _HeightMap {
-    constructor(length, height, flags = 2) {
-      this.length = length;
+    constructor(length2, height, flags = 2) {
+      this.length = length2;
       this.height = height;
       this.flags = flags;
     }
@@ -8969,11 +8986,11 @@ var CodeMirrorTea = (() => {
       return _HeightMap.of(nodes);
     }
     // Again, these are base cases, and are overridden for branch and gap nodes.
-    decomposeLeft(_to, result) {
-      result.push(this);
+    decomposeLeft(_to, result2) {
+      result2.push(this);
     }
-    decomposeRight(_from, result) {
-      result.push(this);
+    decomposeRight(_from, result2) {
+      result2.push(this);
     }
     applyChanges(decorations2, oldDoc, oracle, changes) {
       let me = this, doc2 = oracle.doc;
@@ -9060,8 +9077,8 @@ var CodeMirrorTea = (() => {
   HeightMap.prototype.size = 1;
   var SpaceDeco = /* @__PURE__ */ Decoration.replace({});
   var HeightMapBlock = class extends HeightMap {
-    constructor(length, height, deco) {
-      super(length, height);
+    constructor(length2, height, deco) {
+      super(length2, height);
       this.deco = deco;
       this.spaceAbove = 0;
     }
@@ -9100,8 +9117,8 @@ var CodeMirrorTea = (() => {
     }
   };
   var HeightMapText = class _HeightMapText extends HeightMapBlock {
-    constructor(length, height, above) {
-      super(length, height, null);
+    constructor(length2, height, above) {
+      super(length2, height, null);
       this.collapsed = 0;
       this.widgetHeight = 0;
       this.breaks = 0;
@@ -9139,8 +9156,8 @@ var CodeMirrorTea = (() => {
     }
   };
   var HeightMapGap = class _HeightMapGap extends HeightMap {
-    constructor(length) {
-      super(length, 0);
+    constructor(length2) {
+      super(length2, 0);
     }
     heightMetrics(oracle, offset) {
       let firstLine = oracle.doc.lineAt(offset).number, lastLine = oracle.doc.lineAt(offset + this.length).number;
@@ -9165,8 +9182,8 @@ var CodeMirrorTea = (() => {
         return new BlockInfo(line.from, line.length, lineTop, lineHeight, 0);
       } else {
         let line = Math.max(0, Math.min(lastLine - firstLine, Math.floor((height - top2) / perLine)));
-        let { from, length } = oracle.doc.line(firstLine + line);
-        return new BlockInfo(from, length, top2 + perLine * line, perLine, 0);
+        let { from, length: length2 } = oracle.doc.line(firstLine + line);
+        return new BlockInfo(from, length2, top2 + perLine * line, perLine, 0);
       }
     }
     lineAt(value, type, oracle, top2, offset) {
@@ -9216,11 +9233,11 @@ var CodeMirrorTea = (() => {
       }
       return HeightMap.of(nodes);
     }
-    decomposeLeft(to, result) {
-      result.push(new _HeightMapGap(to - 1), null);
+    decomposeLeft(to, result2) {
+      result2.push(new _HeightMapGap(to - 1), null);
     }
-    decomposeRight(from, result) {
-      result.push(null, new _HeightMapGap(this.length - from - 1));
+    decomposeRight(from, result2) {
+      result2.push(null, new _HeightMapGap(this.length - from - 1));
     }
     updateHeight(oracle, offset = 0, force = false, measured) {
       let end = offset + this.length;
@@ -9248,10 +9265,10 @@ var CodeMirrorTea = (() => {
         }
         if (pos <= end)
           nodes.push(null, new _HeightMapGap(end - pos).updateHeight(oracle, pos));
-        let result = HeightMap.of(nodes);
-        if (singleHeight < 0 || Math.abs(result.height - this.height) >= Epsilon || Math.abs(singleHeight - this.heightMetrics(oracle, offset).perLine) >= Epsilon)
+        let result2 = HeightMap.of(nodes);
+        if (singleHeight < 0 || Math.abs(result2.height - this.height) >= Epsilon || Math.abs(singleHeight - this.heightMetrics(oracle, offset).perLine) >= Epsilon)
           heightChangeFlag = true;
-        return replace(this, result);
+        return replace(this, result2);
       } else if (force || this.outdated) {
         this.setHeight(oracle.heightForGap(offset, offset + this.length));
         this.outdated = false;
@@ -9313,43 +9330,43 @@ var CodeMirrorTea = (() => {
         return this.balanced(this.left.replace(from, to, nodes), this.right);
       if (from > this.left.length)
         return this.balanced(this.left, this.right.replace(from - rightStart, to - rightStart, nodes));
-      let result = [];
+      let result2 = [];
       if (from > 0)
-        this.decomposeLeft(from, result);
-      let left = result.length;
+        this.decomposeLeft(from, result2);
+      let left = result2.length;
       for (let node of nodes)
-        result.push(node);
+        result2.push(node);
       if (from > 0)
-        mergeGaps(result, left - 1);
+        mergeGaps(result2, left - 1);
       if (to < this.length) {
-        let right = result.length;
-        this.decomposeRight(to, result);
-        mergeGaps(result, right);
+        let right = result2.length;
+        this.decomposeRight(to, result2);
+        mergeGaps(result2, right);
       }
-      return HeightMap.of(result);
+      return HeightMap.of(result2);
     }
-    decomposeLeft(to, result) {
+    decomposeLeft(to, result2) {
       let left = this.left.length;
       if (to <= left)
-        return this.left.decomposeLeft(to, result);
-      result.push(this.left);
+        return this.left.decomposeLeft(to, result2);
+      result2.push(this.left);
       if (this.break) {
         left++;
         if (to >= left)
-          result.push(null);
+          result2.push(null);
       }
       if (to > left)
-        this.right.decomposeLeft(to - left, result);
+        this.right.decomposeLeft(to - left, result2);
     }
-    decomposeRight(from, result) {
+    decomposeRight(from, result2) {
       let left = this.left.length, right = left + this.break;
       if (from >= right)
-        return this.right.decomposeRight(from - right, result);
+        return this.right.decomposeRight(from - right, result2);
       if (from < left)
-        this.left.decomposeRight(from, result);
+        this.left.decomposeRight(from, result2);
       if (this.break && from < right)
-        result.push(null);
-      result.push(this.right);
+        result2.push(null);
+      result2.push(this.right);
     }
     balanced(left, right) {
       if (left.size > 2 * right.size || right.size > 2 * left.size)
@@ -9475,13 +9492,13 @@ var CodeMirrorTea = (() => {
       if (deco && deco.endSide > 0)
         this.covering = block;
     }
-    addLineDeco(height, breaks, length) {
+    addLineDeco(height, breaks, length2) {
       let line = this.ensureLine();
-      line.length += length;
-      line.collapsed += length;
+      line.length += length2;
+      line.collapsed += length2;
       line.widgetHeight = Math.max(line.widgetHeight, height);
       line.breaks += breaks;
-      this.writtenTo = this.pos = this.pos + length;
+      this.writtenTo = this.pos = this.pos + length2;
     }
     finish(from) {
       let last2 = this.nodes.length == 0 ? null : this.nodes[this.nodes.length - 1];
@@ -9721,13 +9738,13 @@ var CodeMirrorTea = (() => {
       let measureContent = refresh || this.mustMeasureContent || this.contentDOMHeight != domRect.height;
       this.contentDOMHeight = domRect.height;
       this.mustMeasureContent = false;
-      let result = 0, bias = 0;
+      let result2 = 0, bias = 0;
       if (domRect.width && domRect.height) {
         let { scaleX, scaleY } = getScale(dom, domRect);
         if (scaleX > 5e-3 && Math.abs(this.scaleX - scaleX) > 5e-3 || scaleY > 5e-3 && Math.abs(this.scaleY - scaleY) > 5e-3) {
           this.scaleX = scaleX;
           this.scaleY = scaleY;
-          result |= 16;
+          result2 |= 16;
           refresh = measureContent = true;
         }
       }
@@ -9736,13 +9753,13 @@ var CodeMirrorTea = (() => {
       if (this.paddingTop != paddingTop || this.paddingBottom != paddingBottom) {
         this.paddingTop = paddingTop;
         this.paddingBottom = paddingBottom;
-        result |= 16 | 2;
+        result2 |= 16 | 2;
       }
       if (this.editorWidth != view.scrollDOM.clientWidth) {
         if (oracle.lineWrapping)
           measureContent = true;
         this.editorWidth = view.scrollDOM.clientWidth;
-        result |= 16;
+        result2 |= 16;
       }
       let scrollParent = scrollableParents(this.view.contentDOM, false).y;
       if (scrollParent != this.scrollParent) {
@@ -9771,7 +9788,7 @@ var CodeMirrorTea = (() => {
       if (this.contentDOMWidth != contentWidth || this.editorHeight != view.scrollDOM.clientHeight) {
         this.contentDOMWidth = domRect.width;
         this.editorHeight = view.scrollDOM.clientHeight;
-        result |= 16;
+        result2 |= 16;
       }
       if (measureContent) {
         let lineHeights = view.docView.measureVisibleLineHeights(this.viewport);
@@ -9782,7 +9799,7 @@ var CodeMirrorTea = (() => {
           refresh = lineHeight > 0 && oracle.refresh(whiteSpace, lineHeight, charWidth, textHeight, Math.max(5, contentWidth / charWidth), lineHeights);
           if (refresh) {
             view.docView.minWidth = 0;
-            result |= 16;
+            result2 |= 16;
           }
         }
         if (dTop > 0 && dBottom > 0)
@@ -9795,25 +9812,25 @@ var CodeMirrorTea = (() => {
           this.heightMap = (refresh ? HeightMap.empty().applyChanges(this.stateDeco, Text.empty, this.heightOracle, [new ChangedRange(0, 0, 0, view.state.doc.length)]) : this.heightMap).updateHeight(oracle, 0, refresh, new MeasuredHeights(vp.from, heights));
         }
         if (heightChangeFlag)
-          result |= 2;
+          result2 |= 2;
       }
       let viewportChange = !this.viewportIsAppropriate(this.viewport, bias) || this.scrollTarget && (this.scrollTarget.range.head < this.viewport.from || this.scrollTarget.range.head > this.viewport.to);
       if (viewportChange) {
-        if (result & 2)
-          result |= this.updateScaler();
+        if (result2 & 2)
+          result2 |= this.updateScaler();
         this.viewport = this.getViewport(bias, this.scrollTarget);
-        result |= this.updateForViewport();
+        result2 |= this.updateForViewport();
       }
-      if (result & 2 || viewportChange)
+      if (result2 & 2 || viewportChange)
         this.updateViewportLines();
       if (this.lineGaps.length || this.viewport.to - this.viewport.from > 2e3 << 1)
         this.updateLineGaps(this.ensureLineGaps(refresh ? [] : this.lineGaps, view));
-      result |= this.computeVisibleRanges();
+      result2 |= this.computeVisibleRanges();
       if (this.mustEnforceCursorAssoc) {
         this.mustEnforceCursorAssoc = false;
         view.docView.enforceCursorAssoc();
       }
-      return result;
+      return result2;
     }
     get visibleTop() {
       return this.scaler.fromDOM(this.pixelViewport.top);
@@ -9827,13 +9844,13 @@ var CodeMirrorTea = (() => {
       let { visibleTop, visibleBottom } = this;
       let viewport = new Viewport(map.lineAt(visibleTop - marginTop * 1e3, QueryType.ByHeight, oracle, 0, 0).from, map.lineAt(visibleBottom + (1 - marginTop) * 1e3, QueryType.ByHeight, oracle, 0, 0).to);
       if (scrollTarget) {
-        let { head } = scrollTarget.range;
-        if (head < viewport.from || head > viewport.to) {
+        let { head: head2 } = scrollTarget.range;
+        if (head2 < viewport.from || head2 > viewport.to) {
           let viewHeight = Math.min(this.editorHeight, this.pixelViewport.bottom - this.pixelViewport.top);
-          let block = map.lineAt(head, QueryType.ByPos, oracle, 0, 0), topPos;
+          let block = map.lineAt(head2, QueryType.ByPos, oracle, 0, 0), topPos;
           if (scrollTarget.y == "center")
             topPos = (block.top + block.bottom) / 2 - viewHeight / 2;
-          else if (scrollTarget.y == "start" || scrollTarget.y == "nearest" && head < viewport.from)
+          else if (scrollTarget.y == "start" || scrollTarget.y == "nearest" && head2 < viewport.from)
             topPos = block.top;
           else
             topPos = block.bottom - viewHeight;
@@ -10084,8 +10101,8 @@ var CodeMirrorTea = (() => {
     }
     return counted / structure.total;
   }
-  function find(array, f) {
-    for (let val of array)
+  function find(array2, f) {
+    for (let val of array2)
       if (f(val))
         return val;
     return void 0;
@@ -10637,8 +10654,8 @@ var CodeMirrorTea = (() => {
         this.selectionChanged = true;
       return true;
     }
-    setSelectionRange(anchor, head) {
-      this.selectionRange.set(anchor.node, anchor.offset, head.node, head.offset);
+    setSelectionRange(anchor2, head2) {
+      this.selectionRange.set(anchor2.node, anchor2.offset, head2.node, head2.offset);
       this.selectionChanged = false;
     }
     clearSelectionRange() {
@@ -10938,15 +10955,15 @@ var CodeMirrorTea = (() => {
         selectionEnd: this.toContextPos(view.state.selection.main.head)
       });
       this.handlers.textupdate = (e) => {
-        let main = view.state.selection.main, { anchor, head } = main;
+        let main = view.state.selection.main, { anchor: anchor2, head: head2 } = main;
         let from = this.toEditorPos(e.updateRangeStart), to = this.toEditorPos(e.updateRangeEnd);
         if (view.inputState.composing >= 0 && !this.composing)
           this.composing = { contextBase: e.updateRangeStart, editorBase: from, drifted: false };
         let deletes = to - from > e.text.length;
-        if (from == this.from && anchor < this.from)
-          from = anchor;
-        else if (to == this.to && anchor > this.to)
-          to = anchor;
+        if (from == this.from && anchor2 < this.from)
+          from = anchor2;
+        else if (to == this.to && anchor2 > this.to)
+          to = anchor2;
         let diff = findDiff(view.state.sliceDoc(from, to), e.text, (deletes ? main.from : main.to) - from, deletes ? "end" : null);
         if (!diff) {
           let newSel = EditorSelection.single(this.toEditorPos(e.selectionStart), this.toEditorPos(e.selectionEnd));
@@ -10959,7 +10976,7 @@ var CodeMirrorTea = (() => {
           to: diff.toA + from,
           insert: Text.of(e.text.slice(diff.from, diff.toB).split("\n"))
         };
-        if ((browser.mac || browser.android) && change.from == head - 1 && /^\. ?$/.test(e.text) && view.contentDOM.getAttribute("autocorrect") == "off")
+        if ((browser.mac || browser.android) && change.from == head2 - 1 && /^\. ?$/.test(e.text) && view.contentDOM.getAttribute("autocorrect") == "off")
           change = { from, to, insert: Text.of([e.text.replace(".", " ")]) };
         this.pendingContextChange = change;
         if (!view.state.readOnly) {
@@ -11071,15 +11088,15 @@ var CodeMirrorTea = (() => {
         update.view.requestMeasure(this.measureReq);
     }
     resetRange(state) {
-      let { head } = state.selection.main;
+      let { head: head2 } = state.selection.main;
       this.from = Math.max(
         0,
-        head - 1e4
+        head2 - 1e4
         /* CxVp.Margin */
       );
       this.to = Math.min(
         state.doc.length,
-        head + 1e4
+        head2 + 1e4
         /* CxVp.Margin */
       );
     }
@@ -11101,8 +11118,8 @@ var CodeMirrorTea = (() => {
         this.editContext.updateSelection(start, end);
     }
     rangeIsValid(state) {
-      let { head } = state.selection.main;
-      return !(this.from > 0 && head - this.from < 500 || this.to < state.doc.length && this.to - head < 500 || this.to - this.from > 1e4 * 3);
+      let { head: head2 } = state.selection.main;
+      return !(this.from > 0 && head2 - this.from < 500 || this.to < state.doc.length && this.to - head2 < 500 || this.to - this.from > 1e4 * 3);
     }
     toEditorPos(contextPos, clipLen = this.to - this.from) {
       contextPos = Math.min(contextPos, clipLen);
@@ -11262,13 +11279,13 @@ var CodeMirrorTea = (() => {
         this.viewState.state = state;
         return;
       }
-      let focus = this.hasFocus, focusFlag = 0, dispatchFocus = null;
+      let focus2 = this.hasFocus, focusFlag = 0, dispatchFocus = null;
       if (transactions.some((tr) => tr.annotation(isFocusChange))) {
-        this.inputState.notifiedFocused = focus;
+        this.inputState.notifiedFocused = focus2;
         focusFlag = 1;
-      } else if (focus != this.inputState.notifiedFocused) {
-        this.inputState.notifiedFocused = focus;
-        dispatchFocus = focusChangeTransaction(state, focus);
+      } else if (focus2 != this.inputState.notifiedFocused) {
+        this.inputState.notifiedFocused = focus2;
+        dispatchFocus = focusChangeTransaction(state, focus2);
         if (!dispatchFocus)
           focusFlag = 1;
       }
@@ -12034,10 +12051,10 @@ var CodeMirrorTea = (() => {
     */
     static theme(spec, options) {
       let prefix = StyleModule.newName();
-      let result = [theme.of(prefix), styleModule.of(buildTheme(`.${prefix}`, spec))];
+      let result2 = [theme.of(prefix), styleModule.of(buildTheme(`.${prefix}`, spec))];
       if (options && options.dark)
-        result.push(darkTheme.of(true));
-      return result;
+        result2.push(darkTheme.of(true));
+      return result2;
     }
     /**
     Create an extension that adds styles to the base theme. Like
@@ -12111,13 +12128,13 @@ var CodeMirrorTea = (() => {
     static update(cache3, changes) {
       if (changes.empty && !cache3.some((c) => c.fresh))
         return cache3;
-      let result = [], lastDir = cache3.length ? cache3[cache3.length - 1].dir : Direction.LTR;
+      let result2 = [], lastDir = cache3.length ? cache3[cache3.length - 1].dir : Direction.LTR;
       for (let i2 = Math.max(0, cache3.length - 10); i2 < cache3.length; i2++) {
         let entry = cache3[i2];
         if (entry.dir == lastDir && !changes.touchesRange(entry.from, entry.to))
-          result.push(new _CachedOrder(changes.mapPos(entry.from, 1), changes.mapPos(entry.to, -1), entry.dir, entry.isolates, false, entry.order));
+          result2.push(new _CachedOrder(changes.mapPos(entry.from, 1), changes.mapPos(entry.to, -1), entry.dir, entry.isolates, false, entry.order));
       }
-      return result;
+      return result2;
     }
   };
   function attrsFromFacet(view, facet, base2) {
@@ -12131,9 +12148,9 @@ var CodeMirrorTea = (() => {
   var currentPlatform = browser.mac ? "mac" : browser.windows ? "win" : browser.linux ? "linux" : "key";
   function normalizeKeyName(name2, platform) {
     const parts = name2.split(/-(?!$)/);
-    let result = parts[parts.length - 1];
-    if (result == "Space")
-      result = " ";
+    let result2 = parts[parts.length - 1];
+    if (result2 == "Space")
+      result2 = " ";
     let alt, ctrl, shift2, meta2;
     for (let i2 = 0; i2 < parts.length - 1; ++i2) {
       const mod = parts[i2];
@@ -12154,14 +12171,14 @@ var CodeMirrorTea = (() => {
         throw new Error("Unrecognized modifier name: " + mod);
     }
     if (alt)
-      result = "Alt-" + result;
+      result2 = "Alt-" + result2;
     if (ctrl)
-      result = "Ctrl-" + result;
+      result2 = "Ctrl-" + result2;
     if (meta2)
-      result = "Meta-" + result;
+      result2 = "Meta-" + result2;
     if (shift2)
-      result = "Shift-" + result;
-    return result;
+      result2 = "Shift-" + result2;
+    return result2;
   }
   function modifiers(name2, event, shift2) {
     if (event.altKey)
@@ -12757,16 +12774,16 @@ var CodeMirrorTea = (() => {
     let visible = view.visibleRanges;
     if (visible.length == 1 && visible[0].from == view.viewport.from && visible[0].to == view.viewport.to)
       return visible;
-    let result = [];
+    let result2 = [];
     for (let { from, to } of visible) {
       from = Math.max(view.state.doc.lineAt(from).from, from - maxLength);
       to = Math.min(view.state.doc.lineAt(to).to, to + maxLength);
-      if (result.length && result[result.length - 1].to >= from)
-        result[result.length - 1].to = to;
+      if (result2.length && result2[result2.length - 1].to >= from)
+        result2[result2.length - 1].to = to;
       else
-        result.push({ from, to });
+        result2.push({ from, to });
     }
-    return result;
+    return result2;
   }
   var MatchDecorator = class {
     /**
@@ -13753,10 +13770,10 @@ var CodeMirrorTea = (() => {
       };
       if (open && "then" in open) {
         let pending = this.pending = { pos };
-        open.then((result) => {
+        open.then((result2) => {
           if (this.pending == pending) {
             this.pending = null;
-            done(result);
+            done(result2);
           }
         }, (e) => logException(view.state, e, "hover tooltip"));
       } else {
@@ -14123,7 +14140,7 @@ var CodeMirrorTea = (() => {
   });
   var openDialogEffect = /* @__PURE__ */ StateEffect.define();
   var closeDialogEffect = /* @__PURE__ */ StateEffect.define();
-  function createDialog(view, config2, result) {
+  function createDialog(view, config2, result2) {
     let content2 = config2.content ? config2.content(view, () => done(null)) : null;
     if (!content2) {
       content2 = crelt("form");
@@ -14166,24 +14183,24 @@ var CodeMirrorTea = (() => {
     if (config2.class)
       panel.className = config2.class;
     panel.classList.add("cm-dialog");
-    let focus = typeof config2.focus == "string" ? content2.querySelector(config2.focus) : config2.focus ? content2.querySelector("input") || content2.querySelector("button") : null;
+    let focus2 = typeof config2.focus == "string" ? content2.querySelector(config2.focus) : config2.focus ? content2.querySelector("input") || content2.querySelector("button") : null;
     function done(form) {
       if (panel.contains(panel.ownerDocument.activeElement))
         view.focus();
-      result(form);
+      result2(form);
     }
     return {
       dom: panel,
       top: config2.top,
       mount: () => {
-        if (focus) {
-          if ("select" in focus)
-            focus.select();
-          else if ("focus" in focus)
-            focus.focus();
+        if (focus2) {
+          if ("select" in focus2)
+            focus2.select();
+          else if ("focus" in focus2)
+            focus2.focus();
         }
       },
-      destroy: () => result(null)
+      destroy: () => result2(null)
     };
   }
   var GutterMarker = class extends RangeValue {
@@ -14234,12 +14251,12 @@ var CodeMirrorTea = (() => {
     combine: (values2) => values2.some((x) => x)
   });
   function gutters(config2) {
-    let result = [
+    let result2 = [
       gutterView
     ];
     if (config2 && config2.fixed === false)
-      result.push(unfixGutters.of(true));
-    return result;
+      result2.push(unfixGutters.of(true));
+    return result2;
   }
   var gutterView = /* @__PURE__ */ ViewPlugin.fromClass(class {
     constructor(view) {
@@ -14573,12 +14590,12 @@ var CodeMirrorTea = (() => {
     combine(values2) {
       return combineConfig(values2, { formatNumber: String, domEventHandlers: {} }, {
         domEventHandlers(a, b) {
-          let result = Object.assign({}, a);
+          let result2 = Object.assign({}, a);
           for (let event in b) {
-            let exists = result[event], add2 = b[event];
-            result[event] = exists ? (view, line, event2) => exists(view, line, event2) || add2(view, line, event2) : add2;
+            let exists = result2[event], add2 = b[event];
+            result2[event] = exists ? (view, line, event2) => exists(view, line, event2) || add2(view, line, event2) : add2;
           }
-          return result;
+          return result2;
         }
       });
     }
@@ -14611,9 +14628,9 @@ var CodeMirrorTea = (() => {
     },
     widgetMarker: (view, widget, block) => {
       for (let m of view.state.facet(lineNumberWidgetMarker)) {
-        let result = m(view, widget, block);
-        if (result)
-          return result;
+        let result2 = m(view, widget, block);
+        if (result2)
+          return result2;
       }
       return null;
     },
@@ -14736,8 +14753,8 @@ var CodeMirrorTea = (() => {
       if (typeof match != "function")
         match = NodeType.match(match);
       return (type) => {
-        let result = match(type);
-        return result === void 0 ? null : [this, result];
+        let result2 = match(type);
+        return result2 === void 0 ? null : [this, result2];
       };
     }
   };
@@ -14920,11 +14937,11 @@ var CodeMirrorTea = (() => {
     /**
     Construct a new tree. See also [`Tree.build`](#common.Tree^build).
     */
-    constructor(type, children, positions, length, props) {
+    constructor(type, children, positions, length2, props) {
       this.type = type;
       this.children = children;
       this.positions = positions;
-      this.length = length;
+      this.length = length2;
       this.props = null;
       if (props && props.length) {
         this.props = /* @__PURE__ */ Object.create(null);
@@ -15056,11 +15073,11 @@ var CodeMirrorTea = (() => {
     constructor.
     */
     get propValues() {
-      let result = [];
+      let result2 = [];
       if (this.props)
         for (let id2 in this.props)
-          result.push([+id2, this.props[id2]]);
-      return result;
+          result2.push([+id2, this.props[id2]]);
+      return result2;
     }
     /**
     Balance the direct children of this tree, producing a copy of
@@ -15068,7 +15085,7 @@ var CodeMirrorTea = (() => {
     [`NodeType.none`](#common.NodeType^none).
     */
     balance(config2 = {}) {
-      return this.children.length <= 8 ? this : balanceRange(NodeType.none, this.children, this.positions, 0, this.children.length, 0, this.length, (children, positions, length) => new _Tree(this.type, children, positions, length, this.propValues), config2.makeTree || ((children, positions, length) => new _Tree(NodeType.none, children, positions, length)));
+      return this.children.length <= 8 ? this : balanceRange(NodeType.none, this.children, this.positions, 0, this.children.length, 0, this.length, (children, positions, length2) => new _Tree(this.type, children, positions, length2, this.propValues), config2.makeTree || ((children, positions, length2) => new _Tree(NodeType.none, children, positions, length2)));
     }
     /**
     Build a tree from a postfix-ordered buffer of node information,
@@ -15110,9 +15127,9 @@ var CodeMirrorTea = (() => {
     /**
     Create a tree buffer.
     */
-    constructor(buffer, length, set) {
+    constructor(buffer, length2, set) {
       this.buffer = buffer;
-      this.length = length;
+      this.length = length2;
       this.set = set;
     }
     /**
@@ -15125,30 +15142,30 @@ var CodeMirrorTea = (() => {
     @internal
     */
     toString() {
-      let result = [];
+      let result2 = [];
       for (let index = 0; index < this.buffer.length; ) {
-        result.push(this.childString(index));
+        result2.push(this.childString(index));
         index = this.buffer[index + 3];
       }
-      return result.join(",");
+      return result2.join(",");
     }
     /**
     @internal
     */
     childString(index) {
       let id2 = this.buffer[index], endIndex = this.buffer[index + 3];
-      let type = this.set.types[id2], result = type.name;
-      if (/\W/.test(result) && !type.isError)
-        result = JSON.stringify(result);
+      let type = this.set.types[id2], result2 = type.name;
+      if (/\W/.test(result2) && !type.isError)
+        result2 = JSON.stringify(result2);
       index += 4;
       if (endIndex == index)
-        return result;
+        return result2;
       let children = [];
       while (index < endIndex) {
         children.push(this.childString(index));
         index = this.buffer[index + 3];
       }
-      return result + "(" + children.join(",") + ")";
+      return result2 + "(" + children.join(",") + ")";
     }
     /**
     @internal
@@ -15398,22 +15415,22 @@ var CodeMirrorTea = (() => {
     }
   };
   function getChildren(node, type, before, after) {
-    let cur2 = node.cursor(), result = [];
+    let cur2 = node.cursor(), result2 = [];
     if (!cur2.firstChild())
-      return result;
+      return result2;
     if (before != null)
       for (let found = false; !found; ) {
         found = cur2.type.is(before);
         if (!cur2.nextSibling())
-          return result;
+          return result2;
       }
     for (; ; ) {
       if (after != null && cur2.type.is(after))
-        return result;
+        return result2;
       if (cur2.type.is(type))
-        result.push(cur2.node);
+        result2.push(cur2.node);
       if (!cur2.nextSibling())
-        return after == null ? result : [];
+        return after == null ? result2 : [];
     }
   }
   function matchNodeContext(node, context, i2 = context.length - 1) {
@@ -15860,14 +15877,14 @@ var CodeMirrorTea = (() => {
     get node() {
       if (!this.buffer)
         return this._tree;
-      let cache3 = this.bufferNode, result = null, depth2 = 0;
+      let cache3 = this.bufferNode, result2 = null, depth2 = 0;
       if (cache3 && cache3.context == this.buffer) {
         scan: for (let index = this.index, d = this.stack.length; d >= 0; ) {
           for (let c = cache3; c; c = c._parent)
             if (c.index == index) {
               if (index == this.index)
                 return c;
-              result = c;
+              result2 = c;
               depth2 = d + 1;
               break scan;
             }
@@ -15875,8 +15892,8 @@ var CodeMirrorTea = (() => {
         }
       }
       for (let i2 = depth2; i2 < this.stack.length; i2++)
-        result = new BufferNode(this.buffer, result, this.stack[i2]);
-      return this.bufferNode = new BufferNode(this.buffer, result, this.index);
+        result2 = new BufferNode(this.buffer, result2, this.stack[i2]);
+      return this.bufferNode = new BufferNode(this.buffer, result2, this.index);
     }
     /**
     Get the [tree](#common.Tree) that represents the current node, if
@@ -16043,15 +16060,15 @@ var CodeMirrorTea = (() => {
       }
     }
     function makeBalanced(type, contextHash2) {
-      return (children2, positions2, length2) => {
+      return (children2, positions2, length3) => {
         let lookAhead2 = 0, lastI = children2.length - 1, last2, lookAheadProp;
         if (lastI >= 0 && (last2 = children2[lastI]) instanceof Tree) {
-          if (!lastI && last2.type == type && last2.length == length2)
+          if (!lastI && last2.type == type && last2.length == length3)
             return last2;
           if (lookAheadProp = last2.prop(NodeProp.lookAhead))
-            lookAhead2 = positions2[lastI] + last2.length + lookAheadProp - length2;
+            lookAhead2 = positions2[lastI] + last2.length + lookAheadProp - length3;
         }
-        return makeTree(type, children2, positions2, length2, lookAhead2, contextHash2);
+        return makeTree(type, children2, positions2, length3, lookAhead2, contextHash2);
       };
     }
     function makeRepeatLeaf(children2, positions2, base2, i2, from, to, type, lookAhead2, contextHash2) {
@@ -16063,7 +16080,7 @@ var CodeMirrorTea = (() => {
       children2.push(makeTree(nodeSet.types[type], localChildren, localPositions, to - from, lookAhead2 - to, contextHash2));
       positions2.push(from - base2);
     }
-    function makeTree(type, children2, positions2, length2, lookAhead2, contextHash2, props) {
+    function makeTree(type, children2, positions2, length3, lookAhead2, contextHash2, props) {
       if (contextHash2) {
         let pair2 = [NodeProp.contextHash, contextHash2];
         props = props ? [pair2].concat(props) : [pair2];
@@ -16072,18 +16089,18 @@ var CodeMirrorTea = (() => {
         let pair2 = [NodeProp.lookAhead, lookAhead2];
         props = props ? [pair2].concat(props) : [pair2];
       }
-      return new Tree(type, children2, positions2, length2, props);
+      return new Tree(type, children2, positions2, length3, props);
     }
     function findBufferSize(maxSize, inRepeat) {
       let fork = cursor2.fork();
       let size = 0, start = 0, skip = 0, minStart = fork.end - maxBufferLength;
-      let result = { size: 0, start: 0, skip: 0 };
+      let result2 = { size: 0, start: 0, skip: 0 };
       scan: for (let minPos = fork.pos - maxSize; fork.pos > minPos; ) {
         let nodeSize2 = fork.size;
         if (fork.id == inRepeat && nodeSize2 >= 0) {
-          result.size = size;
-          result.start = start;
-          result.skip = skip;
+          result2.size = size;
+          result2.start = start;
+          result2.skip = skip;
           skip += 4;
           size += 4;
           fork.next();
@@ -16111,11 +16128,11 @@ var CodeMirrorTea = (() => {
         skip += localSkipped;
       }
       if (inRepeat < 0 || size == maxSize) {
-        result.size = size;
-        result.start = start;
-        result.skip = skip;
+        result2.size = size;
+        result2.start = start;
+        result2.skip = skip;
       }
-      return result.size > 4 ? result : void 0;
+      return result2.size > 4 ? result2 : void 0;
     }
     function copyToBuffer(bufferStart, buffer2, index) {
       let { id: id2, start, end, size } = cursor2;
@@ -16141,8 +16158,8 @@ var CodeMirrorTea = (() => {
     let children = [], positions = [];
     while (cursor2.pos > 0)
       takeNode(data.start || 0, data.bufferStart || 0, children, positions, -1, 0);
-    let length = (_a2 = data.length) !== null && _a2 !== void 0 ? _a2 : children.length ? positions[0] + children[0].length : 0;
-    return new Tree(types2[data.topID], children.reverse(), positions.reverse(), length);
+    let length2 = (_a2 = data.length) !== null && _a2 !== void 0 ? _a2 : children.length ? positions[0] + children[0].length : 0;
+    return new Tree(types2[data.topID], children.reverse(), positions.reverse(), length2);
   }
   var nodeSizeCache = /* @__PURE__ */ new WeakMap();
   function nodeSize(balanceType, node) {
@@ -16162,7 +16179,7 @@ var CodeMirrorTea = (() => {
     }
     return size;
   }
-  function balanceRange(balanceType, children, positions, from, to, start, length, mkTop, mkTree) {
+  function balanceRange(balanceType, children, positions, from, to, start, length2, mkTop, mkTree) {
     let total = 0;
     for (let i2 = from; i2 < to; i2++)
       total += nodeSize(balanceType, children[i2]);
@@ -16189,14 +16206,14 @@ var CodeMirrorTea = (() => {
           }
           localChildren.push(children2[groupFrom]);
         } else {
-          let length2 = positions2[i2 - 1] + children2[i2 - 1].length - groupStart;
-          localChildren.push(balanceRange(balanceType, children2, positions2, groupFrom, i2, groupStart, length2, null, mkTree));
+          let length3 = positions2[i2 - 1] + children2[i2 - 1].length - groupStart;
+          localChildren.push(balanceRange(balanceType, children2, positions2, groupFrom, i2, groupStart, length3, null, mkTree));
         }
         localPositions.push(groupStart + offset - start);
       }
     }
     divide(children, positions, from, to, 0);
-    return (mkTop || mkTree)(localChildren, localPositions, length);
+    return (mkTop || mkTree)(localChildren, localPositions, length2);
   }
   var NodeWeakMap = class {
     constructor() {
@@ -16283,11 +16300,11 @@ var CodeMirrorTea = (() => {
     true.
     */
     static addTree(tree, fragments = [], partial = false) {
-      let result = [new _TreeFragment(0, tree.length, tree, 0, false, partial)];
+      let result2 = [new _TreeFragment(0, tree.length, tree, 0, false, partial)];
       for (let f of fragments)
         if (f.to > tree.length)
-          result.push(f);
-      return result;
+          result2.push(f);
+      return result2;
     }
     /**
     Apply a set of edits to an array of fragments, removing or
@@ -16297,7 +16314,7 @@ var CodeMirrorTea = (() => {
     static applyChanges(fragments, changes, minGap = 128) {
       if (!changes.length)
         return fragments;
-      let result = [];
+      let result2 = [];
       let fI = 1, nextF = fragments.length ? fragments[0] : null;
       for (let cI = 0, pos = 0, off = 0; ; cI++) {
         let nextC = cI < changes.length ? changes[cI] : null;
@@ -16310,7 +16327,7 @@ var CodeMirrorTea = (() => {
               cut = fFrom >= fTo ? null : new _TreeFragment(fFrom, fTo, cut.tree, cut.offset + off, cI > 0, !!nextC);
             }
             if (cut)
-              result.push(cut);
+              result2.push(cut);
             if (nextF.to > nextPos)
               break;
             nextF = fI < fragments.length ? fragments[fI++] : null;
@@ -16320,7 +16337,7 @@ var CodeMirrorTea = (() => {
         pos = nextC.toA;
         off = nextC.toA - nextC.toB;
       }
-      return result;
+      return result2;
     }
   };
   var Parser = class {
@@ -16426,10 +16443,10 @@ var CodeMirrorTea = (() => {
             inner2.parse.stopAt(this.stoppedAt);
       }
       if (this.innerDone == this.inner.length) {
-        let result = this.baseTree;
+        let result2 = this.baseTree;
         if (this.stoppedAt != null)
-          result = new Tree(result.type, result.children, result.positions, result.length, result.propValues.concat([[stoppedInner, this.stoppedAt]]));
-        return result;
+          result2 = new Tree(result2.type, result2.children, result2.positions, result2.length, result2.propValues.concat([[stoppedInner, this.stoppedAt]]));
+        return result2;
       }
       let inner = this.inner[this.innerDone], done = inner.parse.advance();
       if (done) {
@@ -16564,7 +16581,7 @@ var CodeMirrorTea = (() => {
     } while (!cursor2.tree);
     let base2 = cursor2.tree, i2 = base2.children.indexOf(buffer);
     let buf = base2.children[i2], b = buf.buffer, newStack = [i2];
-    function split(startI, endI, type, innerOffset, length, stackPos) {
+    function split(startI, endI, type, innerOffset, length2, stackPos) {
       let targetI = stack[stackPos];
       let children = [], positions = [];
       sliceBuf(buf, startI, targetI, children, positions, innerOffset);
@@ -16574,7 +16591,7 @@ var CodeMirrorTea = (() => {
       children.push(child);
       positions.push(from - innerOffset);
       sliceBuf(buf, b[targetI + 3], endI, children, positions, innerOffset);
-      return new Tree(type, children, positions, length);
+      return new Tree(type, children, positions, length2);
     }
     base2.children[i2] = split(0, b.length, NodeType.none, 0, buf.length, stack.length - 1);
     for (let index of newStack) {
@@ -16648,7 +16665,7 @@ var CodeMirrorTea = (() => {
     }
     findMounts(pos, parser7) {
       var _a2;
-      let result = [];
+      let result2 = [];
       if (this.inner) {
         this.inner.cursor.moveTo(pos, 1);
         for (let pos2 = this.inner.cursor.node; pos2; pos2 = pos2.parent) {
@@ -16659,7 +16676,7 @@ var CodeMirrorTea = (() => {
               if (frag.from >= pos2.to)
                 break;
               if (frag.tree == this.curFrag.tree)
-                result.push({
+                result2.push({
                   frag,
                   pos: pos2.from - frag.offset,
                   mount
@@ -16668,7 +16685,7 @@ var CodeMirrorTea = (() => {
           }
         }
       }
-      return result;
+      return result2;
     }
   };
   function punchRanges(outer, ranges) {
@@ -16698,14 +16715,14 @@ var CodeMirrorTea = (() => {
   }
   function findCoverChanges(a, b, from, to) {
     let iA = 0, iB = 0, inA = false, inB = false, pos = -1e9;
-    let result = [];
+    let result2 = [];
     for (; ; ) {
       let nextA = iA == a.length ? 1e9 : inA ? a[iA].to : a[iA].from;
       let nextB = iB == b.length ? 1e9 : inB ? b[iB].to : b[iB].from;
       if (inA != inB) {
         let start = Math.max(pos, from), end = Math.min(nextA, nextB, to);
         if (start < end)
-          result.push(new Range2(start, end));
+          result2.push(new Range2(start, end));
       }
       pos = Math.min(nextA, nextB);
       if (pos == 1e9)
@@ -16727,10 +16744,10 @@ var CodeMirrorTea = (() => {
         }
       }
     }
-    return result;
+    return result2;
   }
   function enterFragments(mounts, ranges) {
-    let result = [];
+    let result2 = [];
     for (let { pos, mount, frag } of mounts) {
       let startPos = pos + (mount.overlay ? mount.overlay[0].from : 0), endPos = startPos + mount.tree.length;
       let from = Math.max(frag.from, startPos), to = Math.min(frag.to, endPos);
@@ -16740,16 +16757,16 @@ var CodeMirrorTea = (() => {
         for (let i2 = 0, pos2 = from; ; i2++) {
           let last2 = i2 == changes.length, end = last2 ? to : changes[i2].from;
           if (end > pos2)
-            result.push(new TreeFragment(pos2, end, mount.tree, -startPos, frag.from >= pos2 || frag.openStart, frag.to <= end || frag.openEnd));
+            result2.push(new TreeFragment(pos2, end, mount.tree, -startPos, frag.from >= pos2 || frag.openStart, frag.to <= end || frag.openEnd));
           if (last2)
             break;
           pos2 = changes[i2].to;
         }
       } else {
-        result.push(new TreeFragment(from, to, mount.tree, -startPos, frag.from >= startPos || frag.openStart, frag.to <= endPos || frag.openEnd));
+        result2.push(new TreeFragment(from, to, mount.tree, -startPos, frag.from >= startPos || frag.openStart, frag.to <= endPos || frag.openEnd));
       }
     }
-    return result;
+    return result2;
   }
 
   // node_modules/@lezer/highlight/dist/index.js
@@ -16833,11 +16850,11 @@ var CodeMirrorTea = (() => {
   function sameArray2(a, b) {
     return a.length == b.length && a.every((x, i2) => x == b[i2]);
   }
-  function powerSet(array) {
+  function powerSet(array2) {
     let sets = [[]];
-    for (let i2 = 0; i2 < array.length; i2++) {
+    for (let i2 = 0; i2 < array2.length; i2++) {
       for (let j = 0, e = sets.length; j < e; j++) {
-        sets.push(sets[j].concat(array[i2]));
+        sets.push(sets[j].concat(array2[i2]));
       }
     }
     return sets.sort((a, b) => b.length - a.length);
@@ -16958,13 +16975,13 @@ var CodeMirrorTea = (() => {
     };
   }
   function highlightTags(highlighters, tags3) {
-    let result = null;
+    let result2 = null;
     for (let highlighter of highlighters) {
       let value = highlighter.style(tags3);
       if (value)
-        result = result ? result + " " + value : value;
+        result2 = result2 ? result2 + " " + value : value;
     }
-    return result;
+    return result2;
   }
   function highlightTree(tree, highlighter, putStyle, from = 0, to = tree.length) {
     let builder = new HighlightBuilder(from, Array.isArray(highlighter) ? highlighter : [highlighter], putStyle);
@@ -17537,10 +17554,10 @@ var CodeMirrorTea = (() => {
         return [{ from: 0, to: state.doc.length }];
       if (!lang || !lang.allowsNesting)
         return [];
-      let result = [];
+      let result2 = [];
       let explore = (tree, from) => {
         if (tree.prop(languageDataProp) == this.data) {
-          result.push({ from, to: from + tree.length });
+          result2.push({ from, to: from + tree.length });
           return;
         }
         let mount = tree.prop(NodeProp.mounted);
@@ -17548,14 +17565,14 @@ var CodeMirrorTea = (() => {
           if (mount.tree.prop(languageDataProp) == this.data) {
             if (mount.overlay)
               for (let r of mount.overlay)
-                result.push({ from: r.from + from, to: r.to + from });
+                result2.push({ from: r.from + from, to: r.to + from });
             else
-              result.push({ from, to: from + tree.length });
+              result2.push({ from, to: from + tree.length });
             return;
           } else if (mount.overlay) {
-            let size = result.length;
+            let size = result2.length;
             explore(mount.tree, mount.overlay[0].from + from);
-            if (result.length > size)
+            if (result2.length > size)
               return;
           }
         }
@@ -17566,7 +17583,7 @@ var CodeMirrorTea = (() => {
         }
       };
       explore(syntaxTree(state), 0);
-      return result;
+      return result2;
     }
     /**
     Indicates whether this language allows nested languages. The
@@ -18025,25 +18042,25 @@ var CodeMirrorTea = (() => {
     return unit.charCodeAt(0) == 9 ? state.tabSize * unit.length : unit.length;
   }
   function indentString(state, cols) {
-    let result = "", ts = state.tabSize, ch = state.facet(indentUnit)[0];
+    let result2 = "", ts = state.tabSize, ch = state.facet(indentUnit)[0];
     if (ch == "	") {
       while (cols >= ts) {
-        result += "	";
+        result2 += "	";
         cols -= ts;
       }
       ch = " ";
     }
     for (let i2 = 0; i2 < cols; i2++)
-      result += ch;
-    return result;
+      result2 += ch;
+    return result2;
   }
   function getIndentation(context, pos) {
     if (context instanceof EditorState)
       context = new IndentContext(context);
     for (let service of context.state.facet(indentService)) {
-      let result = service(context, pos);
-      if (result !== void 0)
-        return result;
+      let result2 = service(context, pos);
+      if (result2 !== void 0)
+        return result2;
     }
     let tree = syntaxTree(context.state);
     return tree.length >= pos ? syntaxIndentation(context, tree, pos) : null;
@@ -18085,19 +18102,19 @@ var CodeMirrorTea = (() => {
     textAfterPos(pos, bias = 1) {
       if (this.options.simulateDoubleBreak && pos == this.options.simulateBreak)
         return "";
-      let { text, from } = this.lineAt(pos, bias);
-      return text.slice(pos - from, Math.min(text.length, pos + 100 - from));
+      let { text: text2, from } = this.lineAt(pos, bias);
+      return text2.slice(pos - from, Math.min(text2.length, pos + 100 - from));
     }
     /**
     Find the column for the given position.
     */
     column(pos, bias = 1) {
-      let { text, from } = this.lineAt(pos, bias);
-      let result = this.countColumn(text, pos - from);
+      let { text: text2, from } = this.lineAt(pos, bias);
+      let result2 = this.countColumn(text2, pos - from);
       let override = this.options.overrideIndentation ? this.options.overrideIndentation(from) : -1;
       if (override > -1)
-        result += override - this.countColumn(text, text.search(/\S|$/));
-      return result;
+        result2 += override - this.countColumn(text2, text2.search(/\S|$/));
+      return result2;
     }
     /**
     Find the column position (taking tabs into account) of the given
@@ -18110,14 +18127,14 @@ var CodeMirrorTea = (() => {
     Find the indentation column of the line at the given point.
     */
     lineIndent(pos, bias = 1) {
-      let { text, from } = this.lineAt(pos, bias);
+      let { text: text2, from } = this.lineAt(pos, bias);
       let override = this.options.overrideIndentation;
       if (override) {
         let overriden = override(from);
         if (overriden > -1)
           return overriden;
       }
-      return this.countColumn(text, text.search(/\S|$/));
+      return this.countColumn(text2, text2.search(/\S|$/));
     }
     /**
     Returns the [simulated line
@@ -18280,15 +18297,15 @@ var CodeMirrorTea = (() => {
       let rules = tr.startState.languageDataAt("indentOnInput", tr.startState.selection.main.head);
       if (!rules.length)
         return tr;
-      let doc2 = tr.newDoc, { head } = tr.newSelection.main, line = doc2.lineAt(head);
-      if (head > line.from + DontIndentBeyond)
+      let doc2 = tr.newDoc, { head: head2 } = tr.newSelection.main, line = doc2.lineAt(head2);
+      if (head2 > line.from + DontIndentBeyond)
         return tr;
-      let lineStart = doc2.sliceString(line.from, head);
+      let lineStart = doc2.sliceString(line.from, head2);
       if (!rules.some((r) => r.test(lineStart)))
         return tr;
       let { state } = tr, last2 = -1, changes = [];
-      for (let { head: head2 } of state.selection.ranges) {
-        let line2 = state.doc.lineAt(head2);
+      for (let { head: head3 } of state.selection.ranges) {
+        let line2 = state.doc.lineAt(head3);
         if (line2.from == last2)
           continue;
         last2 = line2.from;
@@ -18336,9 +18353,9 @@ var CodeMirrorTea = (() => {
   }
   function foldable(state, lineStart, lineEnd) {
     for (let service of state.facet(foldService)) {
-      let result = service(state, lineStart, lineEnd);
-      if (result)
-        return result;
+      let result2 = service(state, lineStart, lineEnd);
+      if (result2)
+        return result2;
     }
     return syntaxFolding(state, lineStart, lineEnd);
   }
@@ -18350,10 +18367,10 @@ var CodeMirrorTea = (() => {
   var unfoldEffect = /* @__PURE__ */ StateEffect.define({ map: mapRange });
   function selectedLines(view) {
     let lines = [];
-    for (let { head } of view.state.selection.ranges) {
-      if (lines.some((l) => l.from <= head && l.to >= head))
+    for (let { head: head2 } of view.state.selection.ranges) {
+      if (lines.some((l) => l.from <= head2 && l.to >= head2))
         continue;
-      lines.push(view.lineBlockAt(head));
+      lines.push(view.lineBlockAt(head2));
     }
     return lines;
   }
@@ -18509,10 +18526,10 @@ var CodeMirrorTea = (() => {
     }
   });
   function codeFolding(config2) {
-    let result = [foldState, baseTheme$12];
+    let result2 = [foldState, baseTheme$12];
     if (config2)
-      result.push(foldConfig.of(config2));
-    return result;
+      result2.push(foldConfig.of(config2));
+    return result2;
   }
   function widgetToDOM(view, prepared) {
     let { state } = view, conf = state.facet(foldConfig);
@@ -18956,12 +18973,12 @@ var CodeMirrorTea = (() => {
     let startToken = { from: dir < 0 ? pos - 1 : pos, to: dir > 0 ? pos + 1 : pos };
     let iter = state.doc.iterRange(pos, dir > 0 ? state.doc.length : 0), depth2 = 0;
     for (let distance = 0; !iter.next().done && distance <= maxScanDistance; ) {
-      let text = iter.value;
+      let text2 = iter.value;
       if (dir < 0)
-        distance += text.length;
+        distance += text2.length;
       let basePos = pos + distance * dir;
-      for (let pos2 = dir > 0 ? 0 : text.length - 1, end = dir > 0 ? text.length : -1; pos2 != end; pos2 += dir) {
-        let found = brackets.indexOf(text[pos2]);
+      for (let pos2 = dir > 0 ? 0 : text2.length - 1, end = dir > 0 ? text2.length : -1; pos2 != end; pos2 += dir) {
+        let found = brackets.indexOf(text2[pos2]);
         if (found < 0 || tree.resolveInner(basePos + pos2, 1).type != tokenType)
           continue;
         if (found % 2 == 0 == dir > 0) {
@@ -18973,7 +18990,7 @@ var CodeMirrorTea = (() => {
         }
       }
       if (dir > 0)
-        distance += text.length;
+        distance += text2.length;
     }
     return iter.done ? { start: startToken, matched: false } : null;
   }
@@ -19337,9 +19354,9 @@ var CodeMirrorTea = (() => {
     static fromTransaction(tr, selection2) {
       let effects = none2;
       for (let invert of tr.startState.facet(invertedEffects)) {
-        let result = invert(tr);
-        if (result.length)
-          effects = effects.concat(result);
+        let result2 = invert(tr);
+        if (result2.length)
+          effects = effects.concat(result2);
       }
       if (!effects.length && tr.changes.empty)
         return null;
@@ -19396,16 +19413,16 @@ var CodeMirrorTea = (() => {
   function addMappingToBranch(branch, mapping) {
     if (!branch.length)
       return branch;
-    let length = branch.length, selections = none2;
-    while (length) {
-      let event = mapEvent(branch[length - 1], mapping, selections);
+    let length2 = branch.length, selections = none2;
+    while (length2) {
+      let event = mapEvent(branch[length2 - 1], mapping, selections);
       if (event.changes && !event.changes.empty || event.effects.length) {
-        let result = branch.slice(0, length);
-        result[length - 1] = event;
-        return result;
+        let result2 = branch.slice(0, length2);
+        result2[length2 - 1] = event;
+        return result2;
       } else {
         mapping = event.mapped;
-        length--;
+        length2--;
         selections = event.selectionsAfter;
       }
     }
@@ -19619,8 +19636,8 @@ var CodeMirrorTea = (() => {
       if (!matching || !matching.end)
         return range;
       found = true;
-      let head = matching.start.from == range.head ? matching.end.to : matching.end.from;
-      return extend ? EditorSelection.range(range.anchor, head) : EditorSelection.cursor(head);
+      let head2 = matching.start.from == range.head ? matching.end.to : matching.end.from;
+      return extend ? EditorSelection.range(range.anchor, head2) : EditorSelection.cursor(head2);
     });
     if (!found)
       return false;
@@ -19632,8 +19649,8 @@ var CodeMirrorTea = (() => {
     let selection2 = updateSel(target.state.selection, (range) => {
       if (range.undirectional && range.head >= range.anchor != forward)
         range = EditorSelection.range(range.head, range.anchor);
-      let head = how(range);
-      return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || void 0, head.assoc);
+      let head2 = how(range);
+      return EditorSelection.range(range.anchor, head2.head, head2.goalColumn, head2.bidiLevel || void 0, head2.assoc);
     });
     if (selection2.eq(target.state.selection))
       return false;
@@ -20173,14 +20190,14 @@ var CodeMirrorTea = (() => {
     [`.normalize("NFKD")`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/normalize)
     (when supported).
     */
-    constructor(text, query, from = 0, to = text.length, normalize, test) {
+    constructor(text2, query, from = 0, to = text2.length, normalize, test) {
       this.test = test;
       this.value = { from: 0, to: 0, precise: false };
       this.done = false;
       this.matches = [];
       this.buffer = "";
       this.bufferPos = 0;
-      this.iter = text.iterRange(from, to);
+      this.iter = text2.iterRange(from, to);
       this.bufferStart = from;
       this.normalize = normalize ? (x) => normalize(basicNormalize(x)) : basicNormalize;
       this.query = this.normalize(query);
@@ -20279,20 +20296,20 @@ var CodeMirrorTea = (() => {
     document. `query` should be the raw pattern (as you'd pass it to
     `new RegExp`).
     */
-    constructor(text, query, options, from = 0, to = text.length) {
-      this.text = text;
+    constructor(text2, query, options, from = 0, to = text2.length) {
+      this.text = text2;
       this.to = to;
       this.curLine = "";
       this.done = false;
       this.value = empty;
       if (/\\[sWDnr]|\n|\r|\[\^/.test(query))
-        return new MultilineRegExpCursor(text, query, options, from, to);
+        return new MultilineRegExpCursor(text2, query, options, from, to);
       this.re = new RegExp(query, baseFlags + ((options === null || options === void 0 ? void 0 : options.ignoreCase) ? "i" : ""));
       this.test = options === null || options === void 0 ? void 0 : options.test;
-      this.iter = text.iter();
-      let startLine = text.lineAt(from);
+      this.iter = text2.iter();
+      let startLine = text2.lineAt(from);
       this.curLineStart = startLine.from;
-      this.matchPos = toCharEnd(text, from);
+      this.matchPos = toCharEnd(text2, from);
       this.getLine(this.curLineStart);
     }
     getLine(skip) {
@@ -20342,9 +20359,9 @@ var CodeMirrorTea = (() => {
   };
   var flattened = /* @__PURE__ */ new WeakMap();
   var FlattenedDoc = class _FlattenedDoc {
-    constructor(from, text) {
+    constructor(from, text2) {
       this.from = from;
-      this.text = text;
+      this.text = text2;
     }
     get to() {
       return this.from + this.text.length;
@@ -20358,27 +20375,27 @@ var CodeMirrorTea = (() => {
       }
       if (cached.from == from && cached.to == to)
         return cached;
-      let { text, from: cachedFrom } = cached;
+      let { text: text2, from: cachedFrom } = cached;
       if (cachedFrom > from) {
-        text = doc2.sliceString(from, cachedFrom) + text;
+        text2 = doc2.sliceString(from, cachedFrom) + text2;
         cachedFrom = from;
       }
       if (cached.to < to)
-        text += doc2.sliceString(cached.to, to);
-      flattened.set(doc2, new _FlattenedDoc(cachedFrom, text));
-      return new _FlattenedDoc(from, text.slice(from - cachedFrom, to - cachedFrom));
+        text2 += doc2.sliceString(cached.to, to);
+      flattened.set(doc2, new _FlattenedDoc(cachedFrom, text2));
+      return new _FlattenedDoc(from, text2.slice(from - cachedFrom, to - cachedFrom));
     }
   };
   var MultilineRegExpCursor = class {
-    constructor(text, query, options, from, to) {
-      this.text = text;
+    constructor(text2, query, options, from, to) {
+      this.text = text2;
       this.to = to;
       this.done = false;
       this.value = empty;
-      this.matchPos = toCharEnd(text, from);
+      this.matchPos = toCharEnd(text2, from);
       this.re = new RegExp(query, baseFlags + ((options === null || options === void 0 ? void 0 : options.ignoreCase) ? "i" : ""));
       this.test = options === null || options === void 0 ? void 0 : options.test;
-      this.flat = FlattenedDoc.get(text, from, this.chunkEnd(
+      this.flat = FlattenedDoc.get(text2, from, this.chunkEnd(
         from + 5e3
         /* Chunk.Base */
       ));
@@ -20423,10 +20440,10 @@ var CodeMirrorTea = (() => {
       return false;
     }
   }
-  function toCharEnd(text, pos) {
-    if (pos >= text.length)
+  function toCharEnd(text2, pos) {
+    if (pos >= text2.length)
       return pos;
-    let line = text.lineAt(pos), next;
+    let line = text2.lineAt(pos), next;
     while (pos < line.to && (next = line.text.charCodeAt(pos - line.from)) >= 56320 && next < 57344)
       pos++;
     return pos;
@@ -20441,14 +20458,14 @@ var CodeMirrorTea = (() => {
     }
     let { state } = view;
     let line = String(state.doc.lineAt(view.state.selection.main.head).number);
-    let { close, result } = showDialog(view, {
+    let { close, result: result2 } = showDialog(view, {
       class: "cm-goto-line",
       label: state.phrase("Go to line"),
       input: { type: "text", name: "line", value: line },
       focus: true,
       submitLabel: state.phrase("go")
     });
-    result.then((form) => {
+    result2.then((form) => {
       let match = form && /^([+-])?(\d+)?(:\d+)?(%)?$/.exec(form.elements["line"].value);
       if (!match) {
         view.dispatch({ effects: close });
@@ -20645,8 +20662,8 @@ var CodeMirrorTea = (() => {
     /**
     @internal
     */
-    unquote(text) {
-      return this.literal ? text : text.replace(/\\([nrt\\])/g, (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "	" : "\\");
+    unquote(text2) {
+      return this.literal ? text2 : text2.replace(/\\([nrt\\])/g, (_, ch) => ch == "n" ? "\n" : ch == "r" ? "\r" : ch == "t" ? "	" : "\\");
     }
     /**
     Compare this query to another query.
@@ -20800,16 +20817,16 @@ var CodeMirrorTea = (() => {
     prevMatch(state, curFrom, curTo) {
       return this.prevMatchInRange(state, 0, curFrom) || this.prevMatchInRange(state, curTo, state.doc.length);
     }
-    getReplacement(result) {
+    getReplacement(result2) {
       return this.spec.unquote(this.spec.replace).replace(/\$([$&]|\d+)/g, (m, i2) => {
         if (i2 == "&")
-          return result.match[0];
+          return result2.match[0];
         if (i2 == "$")
           return "$";
         for (let l = i2.length; l > 0; l--) {
           let n = +i2.slice(0, l);
-          if (n > 0 && n < result.match.length)
-            return result.match[n] + i2.slice(l);
+          if (n > 0 && n < result2.match.length)
+            return result2.match[n] + i2.slice(l);
         }
         return m;
       });
@@ -21197,22 +21214,22 @@ var CodeMirrorTea = (() => {
   function announceMatch(view, { from, to }) {
     let line = view.state.doc.lineAt(from), lineEnd = view.state.doc.lineAt(to).to;
     let start = Math.max(line.from, from - AnnounceMargin), end = Math.min(lineEnd, to + AnnounceMargin);
-    let text = view.state.sliceDoc(start, end);
+    let text2 = view.state.sliceDoc(start, end);
     if (start != line.from) {
       for (let i2 = 0; i2 < AnnounceMargin; i2++)
-        if (!Break.test(text[i2 + 1]) && Break.test(text[i2])) {
-          text = text.slice(i2);
+        if (!Break.test(text2[i2 + 1]) && Break.test(text2[i2])) {
+          text2 = text2.slice(i2);
           break;
         }
     }
     if (end != lineEnd) {
-      for (let i2 = text.length - 1; i2 > text.length - AnnounceMargin; i2--)
-        if (!Break.test(text[i2 - 1]) && Break.test(text[i2])) {
-          text = text.slice(0, i2);
+      for (let i2 = text2.length - 1; i2 > text2.length - AnnounceMargin; i2--)
+        if (!Break.test(text2[i2 - 1]) && Break.test(text2[i2])) {
+          text2 = text2.slice(0, i2);
           break;
         }
     }
-    return EditorView.announce.of(`${view.state.phrase("current match")}. ${text} ${view.state.phrase("on line")} ${line.number}.`);
+    return EditorView.announce.of(`${view.state.phrase("current match")}. ${text2} ${view.state.phrase("on line")} ${line.number}.`);
   }
   var baseTheme3 = /* @__PURE__ */ EditorView.baseTheme({
     ".cm-panel.cm-search": {
@@ -21356,8 +21373,8 @@ var CodeMirrorTea = (() => {
     };
   }
   var Option = class {
-    constructor(completion, source, match, score2) {
-      this.completion = completion;
+    constructor(completion2, source, match, score2) {
+      this.completion = completion2;
       this.source = source;
       this.match = match;
       this.score = score2;
@@ -21375,13 +21392,13 @@ var CodeMirrorTea = (() => {
     return new RegExp(`${addStart ? "^" : ""}(?:${source})${addEnd ? "$" : ""}`, (_a2 = expr.flags) !== null && _a2 !== void 0 ? _a2 : expr.ignoreCase ? "i" : "");
   }
   var pickedCompletion = /* @__PURE__ */ Annotation.define();
-  function insertCompletionText(state, text, from, to) {
+  function insertCompletionText(state, text2, from, to) {
     let { main } = state.selection, fromOff = from - main.from, toOff = to - main.from;
     return {
       ...state.changeByRange((range) => {
         if (range != main && from != to && state.sliceDoc(range.from + fromOff, range.from + toOff) != state.sliceDoc(from, to))
           return { range };
-        let lines = state.toText(text);
+        let lines = state.toText(text2);
         return {
           changes: { from: range.from + fromOff, to: to == main.from ? range.to : range.from + toOff, insert: lines },
           range: EditorSelection.cursor(range.from + fromOff + lines.length)
@@ -21506,17 +21523,17 @@ var CodeMirrorTea = (() => {
       return chars.length == 2 ? null : this.result((any[0] ? -700 : 0) + -200 + -1100, any, word);
     }
     result(score2, positions, word) {
-      let result = [], i2 = 0;
+      let result2 = [], i2 = 0;
       for (let pos of positions) {
         let to = pos + (this.astral ? codePointSize2(codePointAt2(word, pos)) : 1);
-        if (i2 && result[i2 - 1] == pos)
-          result[i2 - 1] = to;
+        if (i2 && result2[i2 - 1] == pos)
+          result2[i2 - 1] = to;
         else {
-          result[i2++] = pos;
-          result[i2++] = to;
+          result2[i2++] = pos;
+          result2[i2++] = to;
         }
       }
-      return this.ret(score2 - word.length, result);
+      return this.ret(score2 - word.length, result2);
     }
   };
   var StrictMatcher = class {
@@ -21612,21 +21629,21 @@ var CodeMirrorTea = (() => {
     let content2 = config2.addToOptions.slice();
     if (config2.icons)
       content2.push({
-        render(completion) {
+        render(completion2) {
           let icon = document.createElement("div");
           icon.classList.add("cm-completionIcon");
-          if (completion.type)
-            icon.classList.add(...completion.type.split(/\s+/g).map((cls) => "cm-completionIcon-" + cls));
+          if (completion2.type)
+            icon.classList.add(...completion2.type.split(/\s+/g).map((cls) => "cm-completionIcon-" + cls));
           icon.setAttribute("aria-hidden", "true");
           return icon;
         },
         position: 20
       });
     content2.push({
-      render(completion, _s, _v, match) {
+      render(completion2, _s, _v, match) {
         let labelElt = document.createElement("span");
         labelElt.className = "cm-completionLabel";
-        let label = completion.displayLabel || completion.label, off = 0;
+        let label = completion2.displayLabel || completion2.label, off = 0;
         for (let j = 0; j < match.length; ) {
           let from = match[j++], to = match[j++];
           if (from > off)
@@ -21642,12 +21659,12 @@ var CodeMirrorTea = (() => {
       },
       position: 50
     }, {
-      render(completion) {
-        if (!completion.detail)
+      render(completion2) {
+        if (!completion2.detail)
           return null;
         let detailElt = document.createElement("span");
         detailElt.className = "cm-completionDetail";
-        detailElt.textContent = completion.detail;
+        detailElt.textContent = completion2.detail;
         return detailElt;
       },
       position: 80
@@ -21768,25 +21785,25 @@ var CodeMirrorTea = (() => {
       let newSel = this.updateSelectedOption(open.selected);
       if (newSel) {
         this.destroyInfo();
-        let { completion } = open.options[open.selected];
-        let { info } = completion;
+        let { completion: completion2 } = open.options[open.selected];
+        let { info } = completion2;
         if (!info)
           return;
-        let infoResult = typeof info === "string" ? document.createTextNode(info) : info(completion);
+        let infoResult = typeof info === "string" ? document.createTextNode(info) : info(completion2);
         if (!infoResult)
           return;
         if ("then" in infoResult) {
           infoResult.then((obj) => {
             if (obj && this.view.state.field(this.stateField, false) == cState)
-              this.addInfoPane(obj, completion);
+              this.addInfoPane(obj, completion2);
           }).catch((e) => logException(this.view.state, e, "completion info"));
         } else {
-          this.addInfoPane(infoResult, completion);
+          this.addInfoPane(infoResult, completion2);
           newSel.setAttribute("aria-describedby", this.info.id);
         }
       }
     }
-    addInfoPane(content2, completion) {
+    addInfoPane(content2, completion2) {
       this.destroyInfo();
       let wrap = this.info = document.createElement("div");
       wrap.className = "cm-tooltip cm-completionInfo";
@@ -21862,7 +21879,7 @@ var CodeMirrorTea = (() => {
       });
       let curSection = null;
       for (let i2 = range.from; i2 < range.to; i2++) {
-        let { completion, match } = options[i2], { section } = completion;
+        let { completion: completion2, match } = options[i2], { section } = completion2;
         if (section) {
           let name2 = typeof section == "string" ? section : section.name;
           if (name2 != curSection && (i2 > range.from || range.from == 0)) {
@@ -21878,11 +21895,11 @@ var CodeMirrorTea = (() => {
         const li = ul.appendChild(document.createElement("li"));
         li.id = id2 + "-" + i2;
         li.setAttribute("role", "option");
-        let cls = this.optionClass(completion);
+        let cls = this.optionClass(completion2);
         if (cls)
           li.className = cls;
         for (let source of this.optionContent) {
-          let node = source(completion, this.view.state, this.view, match);
+          let node = source(completion2, this.view.state, this.view, match);
           if (node)
             li.appendChild(node);
         }
@@ -21974,17 +21991,17 @@ var CodeMirrorTea = (() => {
           option.score += sectionOrder[typeof section == "string" ? section : section.name];
       }
     }
-    let result = [], prev = null;
+    let result2 = [], prev = null;
     let compare2 = conf.compareCompletions;
     for (let opt of options.sort((a, b) => b.score - a.score || compare2(a.completion, b.completion))) {
       let cur2 = opt.completion;
       if (!prev || prev.label != cur2.label || prev.detail != cur2.detail || prev.type != null && cur2.type != null && prev.type != cur2.type || prev.apply != cur2.apply || prev.boost != cur2.boost)
-        result.push(opt);
+        result2.push(opt);
       else if (score(opt.completion) > score(prev))
-        result[result.length - 1] = opt;
+        result2[result2.length - 1] = opt;
       prev = opt.completion;
     }
-    return result;
+    return result2;
   }
   var CompletionDialog = class _CompletionDialog {
     constructor(options, attrs, tooltip, timestamp, selected, disabled) {
@@ -22096,20 +22113,20 @@ var CodeMirrorTea = (() => {
   };
   var noAttrs2 = {};
   function makeAttrs(id2, selected) {
-    let result = {
+    let result2 = {
       "aria-autocomplete": "list",
       "aria-haspopup": "listbox",
       "aria-controls": id2
     };
     if (selected > -1)
-      result["aria-activedescendant"] = id2 + "-" + selected;
-    return result;
+      result2["aria-activedescendant"] = id2 + "-" + selected;
+    return result2;
   }
   var none3 = [];
   function getUpdateType(tr, conf) {
     if (tr.isUserEvent("input.complete")) {
-      let completion = tr.annotation(pickedCompletion);
-      if (completion && conf.activateOnCompletion(completion))
+      let completion2 = tr.annotation(pickedCompletion);
+      if (completion2 && conf.activateOnCompletion(completion2))
         return 4 | 8;
     }
     let typing = tr.isUserEvent("input.type");
@@ -22170,10 +22187,10 @@ var CodeMirrorTea = (() => {
     }
   };
   var ActiveResult = class _ActiveResult extends ActiveSource {
-    constructor(source, explicit, limit, result, from, to) {
+    constructor(source, explicit, limit, result2, from, to) {
       super(source, 3, explicit);
       this.limit = limit;
-      this.result = result;
+      this.result = result2;
       this.from = from;
       this.to = to;
     }
@@ -22184,35 +22201,35 @@ var CodeMirrorTea = (() => {
       var _a2;
       if (!(type & 3))
         return this.map(tr.changes);
-      let result = this.result;
-      if (result.map && !tr.changes.empty)
-        result = result.map(result, tr.changes);
+      let result2 = this.result;
+      if (result2.map && !tr.changes.empty)
+        result2 = result2.map(result2, tr.changes);
       let from = tr.changes.mapPos(this.from), to = tr.changes.mapPos(this.to, 1);
       let pos = cur(tr.state);
-      if (pos > to || !result || type & 2 && (cur(tr.startState) == this.from || pos < this.limit))
+      if (pos > to || !result2 || type & 2 && (cur(tr.startState) == this.from || pos < this.limit))
         return new ActiveSource(
           this.source,
           type & 4 ? 1 : 0
           /* State.Inactive */
         );
       let limit = tr.changes.mapPos(this.limit);
-      if (checkValid(result.validFor, tr.state, from, to))
-        return new _ActiveResult(this.source, this.explicit, limit, result, from, to);
-      if (result.update && (result = result.update(result, from, to, new CompletionContext(tr.state, pos, false))))
-        return new _ActiveResult(this.source, this.explicit, limit, result, result.from, (_a2 = result.to) !== null && _a2 !== void 0 ? _a2 : cur(tr.state));
+      if (checkValid(result2.validFor, tr.state, from, to))
+        return new _ActiveResult(this.source, this.explicit, limit, result2, from, to);
+      if (result2.update && (result2 = result2.update(result2, from, to, new CompletionContext(tr.state, pos, false))))
+        return new _ActiveResult(this.source, this.explicit, limit, result2, result2.from, (_a2 = result2.to) !== null && _a2 !== void 0 ? _a2 : cur(tr.state));
       return new ActiveSource(this.source, 1, this.explicit);
     }
     map(mapping) {
       if (mapping.empty)
         return this;
-      let result = this.result.map ? this.result.map(this.result, mapping) : this.result;
-      if (!result)
+      let result2 = this.result.map ? this.result.map(this.result, mapping) : this.result;
+      if (!result2)
         return new ActiveSource(
           this.source,
           0
           /* State.Inactive */
         );
-      return new _ActiveResult(this.source, this.explicit, mapping.mapPos(this.limit), result, mapping.mapPos(this.from), mapping.mapPos(this.to, 1));
+      return new _ActiveResult(this.source, this.explicit, mapping.mapPos(this.limit), result2, mapping.mapPos(this.from), mapping.mapPos(this.to, 1));
     }
     touches(tr) {
       return tr.changes.touchesRange(this.from, this.to);
@@ -22221,8 +22238,8 @@ var CodeMirrorTea = (() => {
   function checkValid(validFor, state, from, to) {
     if (!validFor)
       return false;
-    let text = state.sliceDoc(from, to);
-    return typeof validFor == "function" ? validFor(text, from, to, state) : ensureAnchor(validFor, true).test(text);
+    let text2 = state.sliceDoc(from, to);
+    return typeof validFor == "function" ? validFor(text2, from, to, state) : ensureAnchor(validFor, true).test(text2);
   }
   var setActiveEffect = /* @__PURE__ */ StateEffect.define({
     map(sources, mapping) {
@@ -22243,16 +22260,16 @@ var CodeMirrorTea = (() => {
   });
   function applyCompletion(view, option) {
     const apply = option.completion.apply || option.completion.label;
-    let result = view.state.field(completionState).active.find((a) => a.source == option.source);
-    if (!(result instanceof ActiveResult))
+    let result2 = view.state.field(completionState).active.find((a) => a.source == option.source);
+    if (!(result2 instanceof ActiveResult))
       return false;
     if (typeof apply == "string")
       view.dispatch({
-        ...insertCompletionText(view.state, apply, result.from, result.to),
+        ...insertCompletionText(view.state, apply, result2.from, result2.to),
         annotations: pickedCompletion.of(option.completion)
       });
     else
-      apply(view, option.completion, result.from, result.to);
+      apply(view, option.completion, result2.from, result2.to);
     return true;
   }
   var createTooltip = /* @__PURE__ */ completionTooltip(completionState, applyCompletion);
@@ -22264,12 +22281,12 @@ var CodeMirrorTea = (() => {
       let step = 1, tooltip;
       if (by == "page" && (tooltip = getTooltip(view, cState.open.tooltip)))
         step = Math.max(2, Math.floor(tooltip.dom.offsetHeight / tooltip.dom.querySelector("li").offsetHeight) - 1);
-      let { length } = cState.open.options;
-      let selected = cState.open.selected > -1 ? cState.open.selected + step * (forward ? 1 : -1) : forward ? 0 : length - 1;
+      let { length: length2 } = cState.open.options;
+      let selected = cState.open.selected > -1 ? cState.open.selected + step * (forward ? 1 : -1) : forward ? 0 : length2 - 1;
       if (selected < 0)
-        selected = by == "page" ? 0 : length - 1;
-      else if (selected >= length)
-        selected = by == "page" ? length - 1 : 0;
+        selected = by == "page" ? 0 : length2 - 1;
+      else if (selected >= length2)
+        selected = by == "page" ? length2 - 1 : 0;
       view.dispatch({ effects: setSelectedEffect.of(selected) });
       return true;
     };
@@ -22375,9 +22392,9 @@ var CodeMirrorTea = (() => {
       let context = new CompletionContext(state, pos, active.explicit, this.view);
       let pending = new RunningQuery(active, context);
       this.running.push(pending);
-      Promise.resolve(active.source(context)).then((result) => {
+      Promise.resolve(active.source(context)).then((result2) => {
         if (!pending.context.aborted) {
-          pending.done = result || null;
+          pending.done = result2 || null;
           this.scheduleAccept();
         }
       }, (err) => {
@@ -22464,8 +22481,8 @@ var CodeMirrorTea = (() => {
       if (!field || !field.open || field.open.disabled || field.open.selected < 0 || !event.key || event.key.length > 1 || event.ctrlKey && !(windows && event.altKey) || event.metaKey)
         return false;
       let option = field.open.options[field.open.selected];
-      let result = field.active.find((a) => a.source == option.source);
-      let commitChars = option.completion.commitCharacters || result.result.commitCharacters;
+      let result2 = field.active.find((a) => a.source == option.source);
+      let commitChars = option.completion.commitCharacters || result2.result.commitCharacters;
       if (commitChars && commitChars.indexOf(event.key) > -1)
         applyCompletion(view, option);
       return false;
@@ -22622,21 +22639,21 @@ var CodeMirrorTea = (() => {
       this.fieldPositions = fieldPositions;
     }
     instantiate(state, pos) {
-      let text = [], lineStart = [pos];
+      let text2 = [], lineStart = [pos];
       let lineObj = state.doc.lineAt(pos), baseIndent = /^\s*/.exec(lineObj.text)[0];
       for (let line of this.lines) {
-        if (text.length) {
+        if (text2.length) {
           let indent2 = baseIndent, tabs = /^\t*/.exec(line)[0].length;
           for (let i2 = 0; i2 < tabs; i2++)
             indent2 += state.facet(indentUnit);
           lineStart.push(pos + indent2.length - tabs);
           line = indent2 + line.slice(tabs);
         }
-        text.push(line);
+        text2.push(line);
         pos += line.length + 1;
       }
       let ranges = this.fieldPositions.map((pos2) => new FieldRange(pos2.field, lineStart[pos2.line] + pos2.from, lineStart[pos2.line] + pos2.to));
-      return { text, ranges };
+      return { text: text2, ranges };
     }
     static parse(template) {
       let fields = [];
@@ -22744,13 +22761,13 @@ var CodeMirrorTea = (() => {
   }
   function snippet(template) {
     let snippet2 = Snippet.parse(template);
-    return (editor, completion, from, to) => {
-      let { text, ranges } = snippet2.instantiate(editor.state, from);
+    return (editor, completion2, from, to) => {
+      let { text: text2, ranges } = snippet2.instantiate(editor.state, from);
       let { main } = editor.state.selection;
       let spec = {
-        changes: { from, to: to == main.from ? main.to : to, insert: Text.of(text) },
+        changes: { from, to: to == main.from ? main.to : to, insert: Text.of(text2) },
         scrollIntoView: true,
-        annotations: completion ? [pickedCompletion.of(completion), Transaction.userEvent.of("input.complete")] : void 0
+        annotations: completion2 ? [pickedCompletion.of(completion2), Transaction.userEvent.of("input.complete")] : void 0
       };
       if (ranges.length)
         spec.selection = fieldSelection(ranges, 0);
@@ -22796,8 +22813,8 @@ var CodeMirrorTea = (() => {
     }
   });
   var addSnippetKeymap = /* @__PURE__ */ Prec.highest(/* @__PURE__ */ keymap.compute([snippetKeymap], (state) => state.facet(snippetKeymap)));
-  function snippetCompletion(template, completion) {
-    return { ...completion, apply: snippet(template) };
+  function snippetCompletion(template, completion2) {
+    return { ...completion2, apply: snippet(template) };
   }
   var snippetPointerHandler = /* @__PURE__ */ EditorView.domEventHandlers({
     mousedown(event, view) {
@@ -23069,10 +23086,10 @@ var CodeMirrorTea = (() => {
 
   // node_modules/@codemirror/lint/dist/index.js
   var SelectedDiagnostic = class {
-    constructor(from, to, diagnostic) {
+    constructor(from, to, diagnostic2) {
       this.from = from;
       this.to = to;
-      this.diagnostic = diagnostic;
+      this.diagnostic = diagnostic2;
     }
   };
   var LintState = class _LintState {
@@ -23163,13 +23180,13 @@ var CodeMirrorTea = (() => {
       return new _LintState(set, panel, findDiagnostic(set));
     }
   };
-  function findDiagnostic(diagnostics2, diagnostic = null, after = 0) {
+  function findDiagnostic(diagnostics2, diagnostic2 = null, after = 0) {
     let found = null;
     diagnostics2.between(after, 1e9, (from, to, { spec }) => {
-      if (diagnostic && spec.diagnostics.indexOf(diagnostic) < 0)
+      if (diagnostic2 && spec.diagnostics.indexOf(diagnostic2) < 0)
         return;
       if (!found)
-        found = new SelectedDiagnostic(from, to, diagnostic || spec.diagnostics[0]);
+        found = new SelectedDiagnostic(from, to, diagnostic2 || spec.diagnostics[0]);
       else if (spec.diagnostics.indexOf(found.diagnostic) < 0)
         return false;
       else
@@ -23179,9 +23196,9 @@ var CodeMirrorTea = (() => {
   }
   function hideTooltip(tr, tooltip) {
     let from = tooltip.pos, to = tooltip.end || from;
-    let result = tr.state.facet(lintConfig).hideOn(tr, from, to);
-    if (result != null)
-      return result;
+    let result2 = tr.state.facet(lintConfig).hideOn(tr, from, to);
+    if (result2 != null)
+      return result2;
     let line = tr.startState.doc.lineAt(tooltip.pos);
     return !!(tr.effects.some((e) => e.is(setDiagnosticsEffect)) || tr.changes.touchesRange(line.from, Math.max(line.to, to)));
   }
@@ -23337,16 +23354,16 @@ var CodeMirrorTea = (() => {
       }
     return assigned;
   }
-  function renderDiagnostic(view, diagnostic, inPanel) {
+  function renderDiagnostic(view, diagnostic2, inPanel) {
     var _a2;
-    let keys2 = inPanel ? assignKeys(diagnostic.actions) : [];
-    return crelt("li", { class: "cm-diagnostic cm-diagnostic-" + diagnostic.severity }, crelt("span", { class: "cm-diagnosticText" }, diagnostic.renderMessage ? diagnostic.renderMessage(view) : diagnostic.message), (_a2 = diagnostic.actions) === null || _a2 === void 0 ? void 0 : _a2.map((action, i2) => {
+    let keys2 = inPanel ? assignKeys(diagnostic2.actions) : [];
+    return crelt("li", { class: "cm-diagnostic cm-diagnostic-" + diagnostic2.severity }, crelt("span", { class: "cm-diagnosticText" }, diagnostic2.renderMessage ? diagnostic2.renderMessage(view) : diagnostic2.message), (_a2 = diagnostic2.actions) === null || _a2 === void 0 ? void 0 : _a2.map((action, i2) => {
       let fired = false, click = (e) => {
         e.preventDefault();
         if (fired)
           return;
         fired = true;
-        let found = findDiagnostic(view.state.field(lintState).diagnostics, diagnostic);
+        let found = findDiagnostic(view.state.field(lintState).diagnostics, diagnostic2);
         if (found)
           action.apply(view, found.from, found.to);
       };
@@ -23364,7 +23381,7 @@ var CodeMirrorTea = (() => {
         onmousedown: click,
         "aria-label": ` Action: ${name2}${keyIndex < 0 ? "" : ` (access key "${keys2[i2]})"`}.`
       }, nameElt);
-    }), diagnostic.source && crelt("div", { class: "cm-diagnosticSource" }, diagnostic.source));
+    }), diagnostic2.source && crelt("div", { class: "cm-diagnosticSource" }, diagnostic2.source));
   }
   var DiagnosticWidget = class extends WidgetType {
     constructor(sev) {
@@ -23379,10 +23396,10 @@ var CodeMirrorTea = (() => {
     }
   };
   var PanelItem = class {
-    constructor(view, diagnostic) {
-      this.diagnostic = diagnostic;
+    constructor(view, diagnostic2) {
+      this.diagnostic = diagnostic2;
       this.id = "item_" + Math.floor(Math.random() * 4294967295).toString(16);
-      this.dom = renderDiagnostic(view, diagnostic, true);
+      this.dom = renderDiagnostic(view, diagnostic2, true);
       this.dom.id = this.id;
       this.dom.setAttribute("role", "option");
     }
@@ -23408,12 +23425,12 @@ var CodeMirrorTea = (() => {
         } else if (event.keyCode == 13) {
           this.view.focus();
         } else if (event.keyCode >= 65 && event.keyCode <= 90 && this.selectedIndex >= 0) {
-          let { diagnostic } = this.items[this.selectedIndex], keys2 = assignKeys(diagnostic.actions);
+          let { diagnostic: diagnostic2 } = this.items[this.selectedIndex], keys2 = assignKeys(diagnostic2.actions);
           for (let i2 = 0; i2 < keys2.length; i2++)
             if (keys2[i2].toUpperCase().charCodeAt(0) == event.keyCode) {
-              let found = findDiagnostic(this.view.state.field(lintState).diagnostics, diagnostic);
+              let found = findDiagnostic(this.view.state.field(lintState).diagnostics, diagnostic2);
               if (found)
-                diagnostic.actions[i2].apply(view, found.from, found.to);
+                diagnostic2.actions[i2].apply(view, found.from, found.to);
             }
         } else {
           return;
@@ -23455,18 +23472,18 @@ var CodeMirrorTea = (() => {
       let i2 = 0, needsSync = false, newSelectedItem = null;
       let seen = /* @__PURE__ */ new Set();
       diagnostics2.between(0, this.view.state.doc.length, (_start, _end, { spec }) => {
-        for (let diagnostic of spec.diagnostics) {
-          if (seen.has(diagnostic))
+        for (let diagnostic2 of spec.diagnostics) {
+          if (seen.has(diagnostic2))
             continue;
-          seen.add(diagnostic);
+          seen.add(diagnostic2);
           let found = -1, item;
           for (let j = i2; j < this.items.length; j++)
-            if (this.items[j].diagnostic == diagnostic) {
+            if (this.items[j].diagnostic == diagnostic2) {
               found = j;
               break;
             }
           if (found < 0) {
-            item = new PanelItem(this.view, diagnostic);
+            item = new PanelItem(this.view, diagnostic2);
             this.items.splice(i2, 0, item);
             needsSync = true;
           } else {
@@ -23738,9 +23755,9 @@ var CodeMirrorTea = (() => {
   }
   function markersForDiagnostics(doc2, diagnostics2) {
     let byLine = /* @__PURE__ */ Object.create(null);
-    for (let diagnostic of diagnostics2) {
-      let line = doc2.lineAt(diagnostic.from);
-      (byLine[line.from] || (byLine[line.from] = [])).push(diagnostic);
+    for (let diagnostic2 of diagnostics2) {
+      let line = doc2.lineAt(diagnostic2.from);
+      (byLine[line.from] || (byLine[line.from] = [])).push(diagnostic2);
     }
     let markers = [];
     for (let line in byLine) {
@@ -24149,8 +24166,8 @@ var CodeMirrorTea = (() => {
           }
         nextStates = best;
       }
-      let result = [];
-      for (let i2 = 0; i2 < nextStates.length && result.length < 4; i2 += 2) {
+      let result2 = [];
+      for (let i2 = 0; i2 < nextStates.length && result2.length < 4; i2 += 2) {
         let s = nextStates[i2 + 1];
         if (s == this.state)
           continue;
@@ -24160,9 +24177,9 @@ var CodeMirrorTea = (() => {
         stack.shiftContext(nextStates[i2], this.pos);
         stack.reducePos = this.pos;
         stack.score -= 200;
-        result.push(stack);
+        result2.push(stack);
       }
-      return result;
+      return result2;
     }
     // Force a reduce, if possible. Return false if that can't
     // be done.
@@ -24417,7 +24434,7 @@ var CodeMirrorTea = (() => {
   function decodeArray(input, Type = Uint16Array) {
     if (typeof input != "string")
       return input;
-    let array = null;
+    let array2 = null;
     for (let pos = 0, out = 0; pos < input.length; ) {
       let value = 0;
       for (; ; ) {
@@ -24440,12 +24457,12 @@ var CodeMirrorTea = (() => {
           break;
         value *= 46;
       }
-      if (array)
-        array[out++] = value;
+      if (array2)
+        array2[out++] = value;
       else
-        array = new Type(value);
+        array2 = new Type(value);
     }
-    return array;
+    return array2;
   }
   var CachedToken = class {
     constructor() {
@@ -24523,17 +24540,17 @@ var CodeMirrorTea = (() => {
     units, since the library does not track lookbehind.
     */
     peek(offset) {
-      let idx = this.chunkOff + offset, pos, result;
+      let idx = this.chunkOff + offset, pos, result2;
       if (idx >= 0 && idx < this.chunk.length) {
         pos = this.pos + offset;
-        result = this.chunk.charCodeAt(idx);
+        result2 = this.chunk.charCodeAt(idx);
       } else {
         let resolved = this.resolveOffset(offset, 1);
         if (resolved == null)
           return -1;
         pos = resolved;
         if (pos >= this.chunk2Pos && pos < this.chunk2Pos + this.chunk2.length) {
-          result = this.chunk2.charCodeAt(pos - this.chunk2Pos);
+          result2 = this.chunk2.charCodeAt(pos - this.chunk2Pos);
         } else {
           let i2 = this.rangeIndex, range = this.range;
           while (range.to <= pos)
@@ -24541,12 +24558,12 @@ var CodeMirrorTea = (() => {
           this.chunk2 = this.input.chunk(this.chunk2Pos = pos);
           if (pos + this.chunk2.length > range.to)
             this.chunk2 = this.chunk2.slice(0, range.to - pos);
-          result = this.chunk2.charCodeAt(0);
+          result2 = this.chunk2.charCodeAt(0);
         }
       }
       if (pos >= this.token.lookAhead)
         this.token.lookAhead = pos + 1;
-      return result;
+      return result2;
     }
     /**
     Accept a token. By default, the end of the token is set to the
@@ -24659,14 +24676,14 @@ var CodeMirrorTea = (() => {
         return this.chunk2.slice(from - this.chunk2Pos, to - this.chunk2Pos);
       if (from >= this.range.from && to <= this.range.to)
         return this.input.read(from, to);
-      let result = "";
+      let result2 = "";
       for (let r of this.ranges) {
         if (r.from >= to)
           break;
         if (r.to > from)
-          result += this.input.read(Math.max(r.from, from), Math.min(r.to, to));
+          result2 += this.input.read(Math.max(r.from, from), Math.min(r.to, to));
       }
-      return result;
+      return result2;
     }
   };
   var TokenGroup = class {
@@ -24955,12 +24972,12 @@ var CodeMirrorTea = (() => {
         let { parser: parser7 } = stack.p;
         for (let i2 = 0; i2 < parser7.specialized.length; i2++)
           if (parser7.specialized[i2] == token.value) {
-            let result = parser7.specializers[i2](this.stream.read(token.start, token.end), stack);
-            if (result >= 0 && stack.p.parser.dialect.allows(result >> 1)) {
-              if ((result & 1) == 0)
-                token.value = result >> 1;
+            let result2 = parser7.specializers[i2](this.stream.read(token.start, token.end), stack);
+            if (result2 >= 0 && stack.p.parser.dialect.allows(result2 >> 1)) {
+              if ((result2 & 1) == 0)
+                token.value = result2 >> 1;
               else
-                token.extended = result >> 1;
+                token.extended = result2 >> 1;
               break;
             }
           }
@@ -25473,28 +25490,28 @@ var CodeMirrorTea = (() => {
         4
         /* ParseState.DefaultReduce */
       );
-      let result = deflt ? action(deflt) : void 0;
+      let result2 = deflt ? action(deflt) : void 0;
       for (let i2 = this.stateSlot(
         state,
         1
         /* ParseState.Actions */
-      ); result == null; i2 += 3) {
+      ); result2 == null; i2 += 3) {
         if (this.data[i2] == 65535) {
           if (this.data[i2 + 1] == 1)
             i2 = pair(this.data, i2 + 2);
           else
             break;
         }
-        result = action(pair(this.data, i2 + 1));
+        result2 = action(pair(this.data, i2 + 1));
       }
-      return result;
+      return result2;
     }
     /**
     Get the states that can follow this one through shift actions or
     goto jumps. @internal
     */
     nextStates(state) {
-      let result = [];
+      let result2 = [];
       for (let i2 = this.stateSlot(
         state,
         1
@@ -25508,11 +25525,11 @@ var CodeMirrorTea = (() => {
         }
         if ((this.data[i2 + 2] & 65536 >> 16) == 0) {
           let value = this.data[i2 + 1];
-          if (!result.some((v, i3) => i3 & 1 && v == value))
-            result.push(this.data[i2], value);
+          if (!result2.some((v, i3) => i3 & 1 && v == value))
+            result2.push(this.data[i2], value);
         }
       }
-      return result;
+      return result2;
     }
     /**
     Configure the parser. Returns a new parser instance that has the
@@ -26229,28 +26246,28 @@ var CodeMirrorTea = (() => {
     return "";
   }
   var android2 = typeof navigator == "object" && /* @__PURE__ */ /Android\b/.test(navigator.userAgent);
-  var autoCloseTags = /* @__PURE__ */ EditorView.inputHandler.of((view, from, to, text, defaultInsert) => {
-    if ((android2 ? view.composing : view.compositionStarted) || view.state.readOnly || from != to || text != ">" && text != "/" || !javascriptLanguage.isActiveAt(view.state, from, -1))
+  var autoCloseTags = /* @__PURE__ */ EditorView.inputHandler.of((view, from, to, text2, defaultInsert) => {
+    if ((android2 ? view.composing : view.compositionStarted) || view.state.readOnly || from != to || text2 != ">" && text2 != "/" || !javascriptLanguage.isActiveAt(view.state, from, -1))
       return false;
     let base2 = defaultInsert(), { state } = base2;
     let closeTags = state.changeByRange((range) => {
       var _a2;
-      let { head } = range, around = syntaxTree(state).resolveInner(head - 1, -1), name2;
+      let { head: head2 } = range, around = syntaxTree(state).resolveInner(head2 - 1, -1), name2;
       if (around.name == "JSXStartTag")
         around = around.parent;
-      if (state.doc.sliceString(head - 1, head) != text || around.name == "JSXAttributeValue" && around.to > head) ;
-      else if (text == ">" && around.name == "JSXFragmentTag") {
-        return { range, changes: { from: head, insert: `</>` } };
-      } else if (text == "/" && around.name == "JSXStartCloseTag") {
+      if (state.doc.sliceString(head2 - 1, head2) != text2 || around.name == "JSXAttributeValue" && around.to > head2) ;
+      else if (text2 == ">" && around.name == "JSXFragmentTag") {
+        return { range, changes: { from: head2, insert: `</>` } };
+      } else if (text2 == "/" && around.name == "JSXStartCloseTag") {
         let empty2 = around.parent, base3 = empty2.parent;
-        if (base3 && empty2.from == head - 2 && ((name2 = elementName(state.doc, base3.firstChild, head)) || ((_a2 = base3.firstChild) === null || _a2 === void 0 ? void 0 : _a2.name) == "JSXFragmentTag")) {
+        if (base3 && empty2.from == head2 - 2 && ((name2 = elementName(state.doc, base3.firstChild, head2)) || ((_a2 = base3.firstChild) === null || _a2 === void 0 ? void 0 : _a2.name) == "JSXFragmentTag")) {
           let insert2 = `${name2}>`;
-          return { range: EditorSelection.cursor(head + insert2.length, -1), changes: { from: head, insert: insert2 } };
+          return { range: EditorSelection.cursor(head2 + insert2.length, -1), changes: { from: head2, insert: insert2 } };
         }
-      } else if (text == ">") {
+      } else if (text2 == ">") {
         let openTag = findOpenTag(around);
-        if (openTag && openTag.name == "JSXOpenTag" && !/^\/?>|^<\//.test(state.doc.sliceString(head, head + 2)) && (name2 = elementName(state.doc, openTag, head)))
-          return { range, changes: { from: head, insert: `</${name2}>` } };
+        if (openTag && openTag.name == "JSXOpenTag" && !/^\/?>|^<\//.test(state.doc.sliceString(head2, head2 + 2)) && (name2 = elementName(state.doc, openTag, head2)))
+          return { range, changes: { from: head2, insert: `</${name2}>` } };
       }
       return { range };
     });
@@ -26620,8 +26637,8 @@ var CodeMirrorTea = (() => {
   function configureNesting(tags3 = [], attributes = []) {
     let script = [], style = [], textarea = [], other = [];
     for (let tag of tags3) {
-      let array = tag.tag == "script" ? script : tag.tag == "style" ? style : tag.tag == "textarea" ? textarea : other;
-      array.push(tag);
+      let array2 = tag.tag == "script" ? script : tag.tag == "style" ? style : tag.tag == "textarea" ? textarea : other;
+      array2.push(tag);
     }
     let attrs = attributes.length ? /* @__PURE__ */ Object.create(null) : null;
     for (let attr of attributes) (attrs[attr.name] || (attrs[attr.name] = [])).push(attr);
@@ -27620,30 +27637,30 @@ var CodeMirrorTea = (() => {
       let known = VariablesByNode.get(node);
       if (known)
         return known;
-      let result = [], seen = /* @__PURE__ */ new Set(), cursor2 = node.cursor(IterMode.IncludeAnonymous);
+      let result2 = [], seen = /* @__PURE__ */ new Set(), cursor2 = node.cursor(IterMode.IncludeAnonymous);
       if (cursor2.firstChild())
         do {
           for (let option of variableNames(doc2, cursor2.node, isVariable))
             if (!seen.has(option.label)) {
               seen.add(option.label);
-              result.push(option);
+              result2.push(option);
             }
         } while (cursor2.nextSibling());
-      VariablesByNode.set(node, result);
-      return result;
+      VariablesByNode.set(node, result2);
+      return result2;
     } else {
-      let result = [], seen = /* @__PURE__ */ new Set();
+      let result2 = [], seen = /* @__PURE__ */ new Set();
       node.cursor().iterate((node2) => {
         var _a2;
         if (isVariable(node2) && node2.matchContext(declSelector) && ((_a2 = node2.node.nextSibling) === null || _a2 === void 0 ? void 0 : _a2.name) == ":") {
           let name2 = doc2.sliceString(node2.from, node2.to);
           if (!seen.has(name2)) {
             seen.add(name2);
-            result.push({ label: name2, type: "variable" });
+            result2.push({ label: name2, type: "variable" });
           }
         }
       });
-      return result;
+      return result2;
     }
   }
   var defineCSSCompletionSource = (isVariable) => (context) => {
@@ -28400,29 +28417,29 @@ var CodeMirrorTea = (() => {
       elt = next;
     }
   }
-  var autoCloseTags2 = /* @__PURE__ */ EditorView.inputHandler.of((view, from, to, text, insertTransaction) => {
-    if (view.composing || view.state.readOnly || from != to || text != ">" && text != "/" || !htmlLanguage.isActiveAt(view.state, from, -1))
+  var autoCloseTags2 = /* @__PURE__ */ EditorView.inputHandler.of((view, from, to, text2, insertTransaction) => {
+    if (view.composing || view.state.readOnly || from != to || text2 != ">" && text2 != "/" || !htmlLanguage.isActiveAt(view.state, from, -1))
       return false;
     let base2 = insertTransaction(), { state } = base2;
     let closeTags = state.changeByRange((range) => {
       var _a2;
-      let didType = state.doc.sliceString(range.from - 1, range.to) == text;
-      let { head } = range, after = syntaxTree(state).resolveInner(head, -1), name2;
-      if (didType && text == ">" && after.name == "EndTag") {
+      let didType = state.doc.sliceString(range.from - 1, range.to) == text2;
+      let { head: head2 } = range, after = syntaxTree(state).resolveInner(head2, -1), name2;
+      if (didType && text2 == ">" && after.name == "EndTag") {
         let tag = after.parent;
-        if ((name2 = elementName2(state.doc, tag.parent, head)) && !selfClosers2.has(name2) && !isClosed(state.doc, tag.parent, name2)) {
-          let to2 = head + (state.doc.sliceString(head, head + 1) === ">" ? 1 : 0);
+        if ((name2 = elementName2(state.doc, tag.parent, head2)) && !selfClosers2.has(name2) && !isClosed(state.doc, tag.parent, name2)) {
+          let to2 = head2 + (state.doc.sliceString(head2, head2 + 1) === ">" ? 1 : 0);
           let insert2 = `</${name2}>`;
-          return { range, changes: { from: head, to: to2, insert: insert2 } };
+          return { range, changes: { from: head2, to: to2, insert: insert2 } };
         }
-      } else if (didType && text == "/" && after.name == "IncompleteCloseTag") {
+      } else if (didType && text2 == "/" && after.name == "IncompleteCloseTag") {
         let tag = after.parent;
-        if (after.from == head - 2 && ((_a2 = tag.lastChild) === null || _a2 === void 0 ? void 0 : _a2.name) != "CloseTag" && (name2 = elementName2(state.doc, tag, head)) && !selfClosers2.has(name2)) {
-          let to2 = head + (state.doc.sliceString(head, head + 1) === ">" ? 1 : 0);
+        if (after.from == head2 - 2 && ((_a2 = tag.lastChild) === null || _a2 === void 0 ? void 0 : _a2.name) != "CloseTag" && (name2 = elementName2(state.doc, tag, head2)) && !selfClosers2.has(name2)) {
+          let to2 = head2 + (state.doc.sliceString(head2, head2 + 1) === ">" ? 1 : 0);
           let insert2 = `${name2}>`;
           return {
-            range: EditorSelection.cursor(head + insert2.length, -1),
-            changes: { from: head, to: to2, insert: insert2 }
+            range: EditorSelection.cursor(head2 + insert2.length, -1),
+            changes: { from: head2, to: to2, insert: insert2 }
           };
         }
       }
@@ -29353,10 +29370,10 @@ var CodeMirrorTea = (() => {
     PYTHON: python
   };
   var themes = { LIGHT: [], DARK: oneDark };
-  function create(parent, text, language2, theme2, readOnly2, tabSize, wrap, listener) {
+  function create(parent, text2, language2, theme2, readOnly2, tabSize, wrap, listener) {
     const compartments = Object.fromEntries(["language", "theme", "readOnly", "tabSize", "wrap", "completion", "custom"].map((k) => [k, new Compartment()]));
     const handle = { view: null, compartments, revision: 0, listener, destroyed: false };
-    handle.view = new EditorView({ parent, doc: text, extensions: [
+    handle.view = new EditorView({ parent, doc: text2, extensions: [
       basicSetup,
       search(),
       lintGutter(),
@@ -29415,6 +29432,57 @@ var CodeMirrorTea = (() => {
   }
   function count(h, name2) {
     return { undo: undoDepth, redo: redoDepth, diagnostics: diagnosticCount }[name2](h.view.state);
+  }
+  function available() {
+    return true;
+  }
+  function text(h) {
+    return h.view.state.doc.toString();
+  }
+  function length(h) {
+    return h.view.state.doc.length;
+  }
+  function revision(h) {
+    return h.revision;
+  }
+  function array() {
+    return [];
+  }
+  function push(a, v) {
+    a.push(v);
+  }
+  function edit(from, to, text2) {
+    return { from, to, insert: text2 };
+  }
+  function select(h, anchor2, head2) {
+    h.view.dispatch({ selection: { anchor: anchor2, head: head2 }, scrollIntoView: true });
+  }
+  function anchor(h) {
+    return h.view.state.selection.main.anchor;
+  }
+  function head(h) {
+    return h.view.state.selection.main.head;
+  }
+  function result(from, to, options) {
+    return { from, to, options };
+  }
+  function completion(label, apply, type, detail) {
+    return { label, apply, type, detail };
+  }
+  function diagnostic(from, to, severity, message) {
+    return { from, to, severity, message };
+  }
+  function focus(h) {
+    h.view.focus();
+  }
+  function hasFocus(h) {
+    return h.view.hasFocus;
+  }
+  function measure(h) {
+    h.view.requestMeasure();
+  }
+  function nativeView(h) {
+    return h.view;
   }
   return __toCommonJS(editor_exports);
 })();

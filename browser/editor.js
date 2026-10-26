@@ -73,3 +73,22 @@ export function command(h, name) {
   return commands[name](h.view);
 }
 export function count(h, name) { return ({undo:undoDepth,redo:redoDepth,diagnostics:diagnosticCount})[name](h.view.state); }
+
+// Shared native boundary for the GWT and TeaVM Java builds.
+export function available() { return true; }
+export function text(h) { return h.view.state.doc.toString(); }
+export function length(h) { return h.view.state.doc.length; }
+export function revision(h) { return h.revision; }
+export function array() { return []; }
+export function push(a,v) { a.push(v); }
+export function edit(from,to,text) { return {from,to,insert:text}; }
+export function select(h,anchor,head) { h.view.dispatch({selection:{anchor,head},scrollIntoView:true}); }
+export function anchor(h) { return h.view.state.selection.main.anchor; }
+export function head(h) { return h.view.state.selection.main.head; }
+export function result(from,to,options) { return {from,to,options}; }
+export function completion(label,apply,type,detail) { return {label,apply,type,detail}; }
+export function diagnostic(from,to,severity,message) { return {from,to,severity,message}; }
+export function focus(h) { h.view.focus(); }
+export function hasFocus(h) { return h.view.hasFocus; }
+export function measure(h) { h.view.requestMeasure(); }
+export function nativeView(h) { return h.view; }

@@ -1,18 +1,17 @@
 package io.instanto.codemirror;
 
+import elemental2.dom.HTMLElement;
 import java.util.*;
 import java.util.function.Consumer;
-import org.teavm.jso.JSObject;
-import org.teavm.jso.dom.html.HTMLElement;
 
 /** A mounted CodeMirror 6 view. The owner must close it before removing its container. */
 public final class Editor implements AutoCloseable {
   public static final String ASSET_PATH = "webjars/codemirror-teavm/0.1.0/codemirror-teavm.js";
-  private JSObject handle;
+  private Object handle;
   private final List<Consumer<EditorUpdate>> listeners = new ArrayList<>();
   private boolean notifying;
 
-  private Editor(HTMLElement parent, EditorOptions options) {
+  private Editor(Object parent, EditorOptions options) {
     Objects.requireNonNull(parent);
     Objects.requireNonNull(options);
     if (!isAvailable())
@@ -41,13 +40,22 @@ public final class Editor implements AutoCloseable {
     return mount(parent, EditorOptions.defaults());
   }
 
-  private JSObject live() {
+  /** Mount in a GWT DOM element, using the same native editor lifecycle. */
+  public static Editor mount(com.google.gwt.dom.client.Element parent, EditorOptions options) {
+    return new Editor(parent, options);
+  }
+
+  public static Editor mount(com.google.gwt.dom.client.Element parent) {
+    return mount(parent, EditorOptions.defaults());
+  }
+
+  private Object live() {
     if (handle == null) throw new IllegalStateException("Editor is closed");
     return handle;
   }
 
-  private JSObject mutable() {
-    JSObject h = live();
+  private Object mutable() {
+    Object h = live();
     if (notifying)
       throw new IllegalStateException(
           "Schedule editor mutations after the update listener returns");
@@ -96,10 +104,10 @@ public final class Editor implements AutoCloseable {
 
   /** Ordered, non-overlapping ranges all refer to the original document; one undo step. */
   public void applyEdits(List<TextEdit> edits) {
-    JSObject h = mutable();
+    Object h = mutable();
     Objects.requireNonNull(edits);
     int length = length(), end = -1, previousFrom = -1;
-    JSObject values = Native.array();
+    Object values = Native.array();
     for (var edit : edits) {
       Objects.requireNonNull(edit);
       if (edit.to() > length || edit.from() < end || edit.from() == previousFrom)
@@ -112,7 +120,7 @@ public final class Editor implements AutoCloseable {
   }
 
   public Selection getSelection() {
-    JSObject h = live();
+    Object h = live();
     return new Selection(Native.anchor(h), Native.head(h));
   }
 
@@ -123,7 +131,7 @@ public final class Editor implements AutoCloseable {
 
   public void setSelection(Selection selection) {
     Objects.requireNonNull(selection);
-    JSObject h = mutable();
+    Object h = mutable();
     if (selection.to() > length()) throw new IllegalArgumentException("Selection exceeds document");
     Native.select(h, selection.anchor(), selection.head());
   }
@@ -199,7 +207,7 @@ public final class Editor implements AutoCloseable {
               if (result.to() > text.length() || result.from() > pos || result.to() < pos)
                 throw new IllegalArgumentException(
                     "Completion range must contain cursor and fit document");
-              JSObject values = Native.array();
+              Object values = Native.array();
               for (var option : result.options())
                 Native.push(
                     values,
@@ -218,10 +226,10 @@ public final class Editor implements AutoCloseable {
 
   /** Publish diagnostics only for the document revision they were computed from. */
   public boolean setDiagnostics(int expectedRevision, List<Diagnostic> diagnostics) {
-    JSObject h = mutable();
+    Object h = mutable();
     Objects.requireNonNull(diagnostics);
     if (expectedRevision != revision()) return false;
-    JSObject values = Native.array();
+    Object values = Native.array();
     int length = length();
     for (var diagnostic : diagnostics) {
       Objects.requireNonNull(diagnostic);
@@ -251,7 +259,7 @@ public final class Editor implements AutoCloseable {
    * Replace the custom extension compartment; use extensions built with this bundle's state/view
    * exports.
    */
-  public void setExtensions(JSObject extensions) {
+  public void setExtensions(Object extensions) {
     Native.configure(mutable(), "custom", Objects.requireNonNull(extensions));
   }
 
@@ -259,7 +267,7 @@ public final class Editor implements AutoCloseable {
    * Low-level escape hatch. Direct transactions bypass Java validation; do not destroy the view
    * directly.
    */
-  public JSObject nativeView() {
+  public Object nativeView() {
     return Native.view(live());
   }
 
@@ -283,7 +291,7 @@ public final class Editor implements AutoCloseable {
   @Override
   public void close() {
     if (handle == null) return;
-    JSObject h = mutable();
+    Object h = mutable();
     Native.destroy(h);
     handle = null;
     listeners.clear();

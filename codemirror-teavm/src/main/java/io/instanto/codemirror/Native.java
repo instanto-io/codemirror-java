@@ -1,30 +1,28 @@
 package io.instanto.codemirror;
 
-import org.teavm.jso.*;
-import org.teavm.jso.dom.html.HTMLElement;
+import jsinterop.annotations.*;
 
+@JsType(isNative = true, namespace = JsPackage.GLOBAL, name = "CodeMirrorTea")
 final class Native {
   private Native() {}
 
-  @JSFunctor
-  interface Update extends JSObject {
+  @JsFunction
+  interface Update {
     void accept(boolean doc, boolean selection, int revision, int anchor, int head);
   }
 
-  @JSFunctor
-  interface Complete extends JSObject {
-    JSObject complete(String text, int pos, boolean explicit, int from);
+  @JsFunction
+  interface Complete {
+    Object complete(String text, int pos, boolean explicit, int from);
   }
 
-  @JSBody(script = "return typeof CodeMirrorTea !== 'undefined' && CodeMirrorTea.apiVersion === 1;")
-  static native boolean available();
+  @JsOverlay
+  static boolean available() {
+    return jsinterop.base.Js.global().get("CodeMirrorTea") != null;
+  }
 
-  @JSBody(
-      params = {"parent", "text", "lang", "theme", "readOnly", "tabSize", "wrap", "listener"},
-      script =
-          "return CodeMirrorTea.create(parent,text,lang,theme,readOnly,tabSize,wrap,listener);")
-  static native JSObject create(
-      HTMLElement parent,
+  public static native Object create(
+      Object parent,
       String text,
       String lang,
       String theme,
@@ -33,116 +31,58 @@ final class Native {
       boolean wrap,
       Update listener);
 
-  @JSBody(params = "h", script = "CodeMirrorTea.destroy(h);")
-  static native void destroy(JSObject h);
+  public static native void destroy(Object h);
 
-  @JSBody(params = "h", script = "return h.view.state.doc.toString();")
-  static native String text(JSObject h);
+  public static native String text(Object h);
 
-  @JSBody(params = "h", script = "return h.view.state.doc.length;")
-  static native int length(JSObject h);
+  public static native int length(Object h);
 
-  @JSBody(params = "h", script = "return h.revision;")
-  static native int revision(JSObject h);
+  public static native int revision(Object h);
 
-  @JSBody(
-      params = {"h", "key", "value"},
-      script = "CodeMirrorTea.configure(h,key,value);")
-  static native void configure(JSObject h, String key, JSObject value);
+  public static native void configure(Object h, String key, Object value);
 
-  @JSBody(
-      params = {"h", "key", "value"},
-      script = "CodeMirrorTea.configure(h,key,value);")
-  static native void configure(JSObject h, String key, String value);
+  public static native void configure(Object h, String key, String value);
 
-  @JSBody(
-      params = {"h", "key", "value"},
-      script = "CodeMirrorTea.configure(h,key,value);")
-  static native void configure(JSObject h, String key, boolean value);
+  public static native void configure(Object h, String key, boolean value);
 
-  @JSBody(
-      params = {"h", "key", "value"},
-      script = "CodeMirrorTea.configure(h,key,value);")
-  static native void configure(JSObject h, String key, int value);
+  public static native void configure(Object h, String key, int value);
 
-  @JSBody(script = "return [];")
-  static native JSObject array();
+  public static native Object array();
 
-  @JSBody(
-      params = {"a", "v"},
-      script = "a.push(v);")
-  static native void push(JSObject a, JSObject v);
+  public static native void push(Object a, Object v);
 
-  @JSBody(
-      params = {"from", "to", "text"},
-      script = "return {from:from,to:to,insert:text};")
-  static native JSObject edit(int from, int to, String text);
+  public static native Object edit(int from, int to, String text);
 
-  @JSBody(
-      params = {"h", "edits"},
-      script = "CodeMirrorTea.edits(h,edits);")
-  static native void edits(JSObject h, JSObject edits);
+  public static native void edits(Object h, Object edits);
 
-  @JSBody(
-      params = {"h", "anchor", "head"},
-      script = "h.view.dispatch({selection:{anchor:anchor,head:head},scrollIntoView:true});")
-  static native void select(JSObject h, int anchor, int head);
+  public static native void select(Object h, int anchor, int head);
 
-  @JSBody(params = "h", script = "return h.view.state.selection.main.anchor;")
-  static native int anchor(JSObject h);
+  public static native int anchor(Object h);
 
-  @JSBody(params = "h", script = "return h.view.state.selection.main.head;")
-  static native int head(JSObject h);
+  public static native int head(Object h);
 
-  @JSBody(
-      params = {"h", "command"},
-      script = "return CodeMirrorTea.command(h,command);")
-  static native boolean command(JSObject h, String command);
+  public static native boolean command(Object h, String command);
 
-  @JSBody(
-      params = {"h", "name"},
-      script = "return CodeMirrorTea.count(h,name);")
-  static native int count(JSObject h, String name);
+  public static native int count(Object h, String name);
 
-  @JSBody(
-      params = {"h", "text", "caseSensitive", "regexp"},
-      script = "return CodeMirrorTea.search(h,text,caseSensitive,regexp);")
-  static native boolean search(JSObject h, String text, boolean caseSensitive, boolean regexp);
+  public static native boolean search(Object h, String text, boolean caseSensitive, boolean regexp);
 
-  @JSBody(
-      params = {"h", "provider"},
-      script = "CodeMirrorTea.completions(h,provider);")
-  static native void completions(JSObject h, Complete provider);
+  public static native void completions(Object h, Complete provider);
 
-  @JSBody(
-      params = {"from", "to", "options"},
-      script = "return {from:from,to:to,options:options};")
-  static native JSObject result(int from, int to, JSObject options);
+  public static native Object result(int from, int to, Object options);
 
-  @JSBody(
-      params = {"label", "apply", "type", "detail"},
-      script = "return {label:label,apply:apply,type:type,detail:detail};")
-  static native JSObject completion(String label, String apply, String type, String detail);
+  public static native Object completion(String label, String apply, String type, String detail);
 
-  @JSBody(
-      params = {"from", "to", "severity", "message"},
-      script = "return {from:from,to:to,severity:severity,message:message};")
-  static native JSObject diagnostic(int from, int to, String severity, String message);
+  public static native Object diagnostic(int from, int to, String severity, String message);
 
-  @JSBody(
-      params = {"h", "values"},
-      script = "CodeMirrorTea.diagnostics(h,values);")
-  static native void diagnostics(JSObject h, JSObject values);
+  public static native void diagnostics(Object h, Object values);
 
-  @JSBody(params = "h", script = "h.view.focus();")
-  static native void focus(JSObject h);
+  public static native void focus(Object h);
 
-  @JSBody(params = "h", script = "return h.view.hasFocus;")
-  static native boolean hasFocus(JSObject h);
+  public static native boolean hasFocus(Object h);
 
-  @JSBody(params = "h", script = "h.view.requestMeasure();")
-  static native void measure(JSObject h);
+  public static native void measure(Object h);
 
-  @JSBody(params = "h", script = "return h.view;")
-  static native JSObject view(JSObject h);
+  @JsMethod(name = "nativeView")
+  public static native Object view(Object h);
 }

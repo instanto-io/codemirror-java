@@ -1,0 +1,1 @@
+<module rename-to="contract"><inherits name="io.instanto.CodeMirror"/><source path="client"/><entry-point class="io.instanto.codemirror.testing.client.Entry"/></module>

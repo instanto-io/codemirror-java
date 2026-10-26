@@ -32,6 +32,8 @@
   </properties>
   <modules>
     <module>codemirror-webjar</module>
+    <module>codemirror-gwt</module>
+    <module>codemirror-gwt-tests</module>
     <module>codemirror-teavm</module>
     <module>codemirror-showcase</module>
   </modules>

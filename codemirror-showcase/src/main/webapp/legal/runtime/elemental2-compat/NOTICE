@@ -1,0 +1,28 @@
+TeaVM Compatibility Libraries
+
+Elemental2 and JsInterop APIs originate with Google and their contributors, under
+Apache License 2.0. The build resolves the declared Elemental2 artifacts from Maven;
+generated adaptations retain their original source headers.
+
+The modular GWT service compatibility sources retain the original package names
+and copyright headers of the APIs they adapt.
+
+The GWT client compatibility implementation and portable contracts were extracted
+from the bootstrap-widgets project (https://github.com/instanto-io/bootstrap-widgets).
+Sources retain their Google,
+GWT and other original contributor headers. Independent TeaVM adaptations are
+maintained under io.instanto, without claiming upstream ownership or endorsement.
+
+The GWT client additions include maintained GWT 2.13.1 source for editors, text
+direction, event buses, HTML sanitisation, stylesheet batching, position results
+and typed-array contracts. Original headers remain in source; provenance/gwt-*
+records the upstream source hashes and adaptation notes.
+
+The UiBinder compatibility processor was extracted from the Bootstrap widget
+project, Copyright (C) 2026 Carl Stainton, under Apache License 2.0. It includes
+Material-driven generic setter, preformatted text and default-string generation.
+
+The GWT resource compatibility Maven plugin was extracted from the Bootstrap
+widget project, Copyright (C) 2026 Carl Stainton, under Apache License 2.0.
+The imported files and source revision are recorded in
+provenance/gwt-resources-compat-maven-plugin.json.
