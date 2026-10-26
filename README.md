@@ -22,27 +22,8 @@ Choose one library artifact. Both include `io.instanto:codemirror-webjar`.
 The project and repository are named CodeMirror Java; existing Maven coordinates,
 Java packages, and versioned browser asset paths remain unchanged.
 
-### Snapshot repository
-
-Snapshots are published to the Instanto Maven registry after CI passes the GWT
-and TeaVM browser tests in Chromium and WebKit, including the optimized build.
-Configure the repository in your Maven settings or application POM:
-
-```xml
-<repositories>
-  <repository>
-    <id>forgejo-instanto</id>
-    <url>https://packages.instanto.io/api/packages/instanto-io/maven</url>
-    <releases><enabled>false</enabled></releases>
-    <snapshots><enabled>true</enabled></snapshots>
-  </repository>
-</repositories>
-```
-
-If registry authentication is required, put credentials in a Maven settings
-server named `forgejo-instanto`; see [.github/maven-settings.xml](.github/maven-settings.xml)
-for environment-variable placeholders. Configure this repository in **settings**
-when resolving the Instanto parent POM itself. No Maven Central release is claimed.
+The examples below use development snapshot coordinates. Build and install the
+artifacts from source for local use; a Maven Central release is not yet available.
 
 ## GWT
 
@@ -404,12 +385,7 @@ The TeaVM site is written to `codemirror-showcase/target/site`; the GWT browser
 contract page is in `codemirror-gwt-tests/target/site`. Both compilers and both
 browser engines are exercised by the build.
 [The build workflow](.github/workflows/build.yml) records browser installation
-and verification. On pushes to `main` and manual `main` runs, its
-`publish-snapshot` job waits for `verify`, then calls the same shared Maven
-publication workflow used by the other ports. It publishes the parent POM,
-`codemirror-webjar`, `codemirror-gwt`, and `codemirror-teavm`, with source and
-Javadoc archives where applicable. Showcase and test modules are excluded.
-Pull requests run verification without publishing.
+and verification for both compiler targets.
 
 Node 22+ is needed only to regenerate the committed assets:
 `npm ci && npm run build`; `npm run check:assets` checks their reproducibility.
