@@ -10,7 +10,7 @@ both **GWT** and **TeaVM**.
 CodeMirror 6 and maintain one GWT/JsInterop source API for both platforms.
 
 [Showcase](https://instanto-io.github.io/codemirror-java/) ·
-[GWT setup](#gwt) · [TeaVM setup](#teavm) · [Shared API](#shared-api) ·
+[GWT setup](#gwt) · [TeaVM setup](#teavm) · [Shared API](#shared-api) · [Diff and merge](#diff-and-merge) ·
 [Upstream research](docs/UPSTREAM.md)
 
 ## What the library provides
@@ -25,11 +25,12 @@ The Java API wraps common CodeMirror operations in types such as `Editor`,
 `Selection`, `Completion` and `Diagnostic`. For these features, you work with Java
 methods and callbacks instead of constructing CodeMirror's JavaScript state and
 view objects yourself. `CodeMirrorWidget` adds GWT panel integration, sizing and
-value-change events for applications built around widgets.
+value-change events for applications built around widgets. `CodeMirrorMergeWidget`
+provides side-by-side and unified comparison, with editing and merge controls.
 
 We maintain one GWT/JsInterop source API for both compiler targets. The GWT build
 uses GWT's DOM and widget APIs directly. The TeaVM build adapts those same sources
-using Instanto's compatibility layers, so the editor and widget code shown here
+using `gwt-user-compat` and `elemental2-compat`, so the editor and widget code shown here
 can be used with either compiler. Both builds call the same bundled CodeMirror
 JavaScript implementation in the browser.
 
@@ -306,26 +307,77 @@ in your page styling, or use `CodeMirrorWidget.setSize(...)` when working with
 widgets. This lets the editor fit into your existing form or panel layout while
 CodeMirror handles the contents of the editing area.
 
-## Editor or CodeMirrorWidget?
+## Widgets and direct DOM use
 
-Choose the form that fits how your application builds its screens. If you already
-manage DOM elements, mount an `Editor` in one of them. If you use GWT panels,
-`CodeMirrorWidget` makes the editor participate in the normal widget lifecycle.
-This widget option also works on TeaVM through `gwt-user-compat`.
+For screens built from GWT widgets, use `CodeMirrorWidget` for editing and
+`CodeMirrorMergeWidget` for comparison. These same widgets work with both GWT
+and TeaVM through `gwt-user-compat`. Their panel owns attachment, sizing and
+removal, and their `HasValue<String>` API provides the editable document and
+value-change events.
 
-| Type | Use when | Ownership |
-| --- | --- | --- |
-| `Editor` | Your screen manages DOM containers directly | Mount after attachment; call `close()` before removing the container |
-| `CodeMirrorWidget` | Your UI uses GWT panels, including on TeaVM with `gwt-user-compat` | Widget attachment creates the editor; detachment disposes it and retains text |
+`Editor` is the existing lower-level API for applications that manage DOM
+containers directly. It is not a separate platform implementation or a second
+screen component that an application must create. `CodeMirrorWidget` owns one
+internally and exposes its advanced editing operations through `getEditor()`
+while attached. The merge widget exposes its operations directly, with no
+separate public merge-editor class.
 
-Both forms control the same editor. The widget adds sizing and value-change
-events; while it is attached, `getEditor()` gives you access to the full `Editor`
-API. Load the resources before mounting the editor or attaching the widget, as
-shown above.
+Load `CodeMirrorResources` before attaching a widget or directly mounting an
+editor. `EditorOptions` supplies the editing widget's initial text, language,
+theme, read-only state, tab size and wrapping.
 
-You can supply `EditorOptions` to choose the initial text, language, theme,
-read-only state, tab size and wrapping. Direct mounting accepts either a GWT DOM
-element or an Elemental2 `HTMLElement`, so it can fit into either style of UI code.
+## Diff and merge
+
+`CodeMirrorMergeWidget` compares an original baseline with a modified document.
+It uses the official `@codemirror/merge` package, included in the same WebJar and
+resource loader as the editor. CodeMirror injects its comparison styles; no extra
+script or stylesheet references are needed. Give the widget a width and height.
+
+```java
+CodeMirrorResources.whenReady(() -> {
+  CodeMirrorMergeWidget comparison = new CodeMirrorMergeWidget(
+      "class Hello {}", "class Hello { String name; }");
+  comparison.setLanguage(Language.JAVA);
+  comparison.setSize("100%", "400px");
+  comparison.setMode(CodeMirrorMergeWidget.Mode.UNIFIED);
+  comparison.addValueChangeHandler(event -> saveText(event.getValue()));
+  RootPanel.get("compare").add(comparison);
+}, error -> showLoadError(error));
+```
+
+Import `io.instanto.codemirror.*` and `com.google.gwt.user.client.ui.RootPanel`.
+The example is identical for GWT and TeaVM; use the platform dependency described
+above. `saveText` and `showLoadError` are application callbacks.
+
+| Operation | Behavior |
+| --- | --- |
+| `setMode(Mode.SPLIT)` | Default: original on the left, modified on the right; arrows revert individual changes into the modified document |
+| `setMode(Mode.UNIFIED)` | One editable document with deleted text displayed inline and accept/reject controls |
+| `getOriginal()` / `setOriginal(text)` | Read or replace the comparison baseline |
+| `getValue()` / `setValue(text)` | Read or replace the modified document; setters are silent unless `setValue(text, true)` is used |
+| `getChangeCount()` | Current number of changed blocks; requires attachment |
+| `nextChange()` / `previousChange()` | Navigate changed blocks while attached |
+| `acceptChange(index)` | In unified mode, copy a current zero-based changed block into the original baseline |
+| `rejectChange(index)` | In unified mode, restore a current changed block from the original into the modified document |
+| `undo()` / `redo()` | Undo or redo modified-document edits, including rejections |
+| `setReadOnly(true)` | Disable user editing and merge controls; application text setters still work |
+| `setCollapseUnchanged(true)` | Collapse long unchanged sections with three lines of context |
+| `setLanguage(...)` / `setTheme(...)` | Configure syntax highlighting and light/dark presentation |
+
+Accepting a change updates the baseline: it does not change the modified value or
+fire a value-change event. Read `getOriginal()` if your application needs the
+accepted baseline. Acceptance is not part of the modified document's undo history.
+Changed-block indices are transient and must be re-evaluated after edits or merges.
+Missing indices and read-only views return `false` from accept/reject. These two
+methods require unified mode; split mode provides its own revert controls.
+
+Changing mode, language, theme, read-only state or collapse settings rebuilds the
+view, retaining both documents but resetting selection and undo history. Detaching
+releases all native views and retains both texts, including accepted changes, for
+reattachment. Call `onResize()` when a container changes size or becomes visible.
+
+This is a two-document comparison and merge component. Git operations, three-way
+conflict resolution and saving the result belong to the application.
 
 ## Shared API
 
@@ -509,7 +561,10 @@ Unicode offsets, selections, configuration changes, history, search/replace,
 Java completion, diagnostics, listeners and disposal. Shared widget checks run
 on GWT 2.13.1 and TeaVM, covering sizing, events, handler removal and reattachment.
 The GWT build also checks editing, selection, history, search, diagnostics and
-Java completion. TeaVM tests run in both standard and optimized builds.
+Java completion. Shared merge-widget checks cover split/unified comparison,
+accept/reject, empty documents, Unicode, final-line changes, read-only commands,
+value events and detach/reattach. The showcase also exercises the comparison
+controls in both browser engines. TeaVM tests run in both standard and optimized builds.
 
 The typed Java API does not yet cover creating multiple selections, asynchronous
 completion, snippet placeholders, diagnostic fixes or custom syntax parsers. There

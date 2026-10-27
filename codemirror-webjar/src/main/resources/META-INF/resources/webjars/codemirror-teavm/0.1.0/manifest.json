@@ -1,6 +1,6 @@
 {
   "bundleVersion": "0.1.0",
-  "sha256": "13cb8825de5990a90a3c05db625f7960f25a1fdbe0d30b418c4df614be98aaba",
+  "sha256": "0b96d38d0a93c05bbbe9112dd9b099839814c16b82630ecf963a733b6a815489",
   "packages": {
     "@codemirror/autocomplete": {
       "version": "6.20.4",
@@ -80,6 +80,14 @@
       "repository": {
         "type": "git",
         "url": "git+https://code.haverbeke.berlin/codemirror/lint.git"
+      }
+    },
+    "@codemirror/merge": {
+      "version": "6.12.3",
+      "license": "MIT",
+      "repository": {
+        "type": "git",
+        "url": "git+https://code.haverbeke.berlin/codemirror/merge.git"
       }
     },
     "@codemirror/search": {

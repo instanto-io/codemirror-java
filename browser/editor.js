@@ -1,3 +1,4 @@
+import {MergeView, unifiedMergeView, getChunks, getOriginalDoc, originalDocChangeEffect, acceptChunk, rejectChunk, goToNextChunk, goToPreviousChunk} from '@codemirror/merge';
 import {basicSetup} from 'codemirror';
 import * as state from '@codemirror/state';
 import * as view from '@codemirror/view';
@@ -13,7 +14,7 @@ import {css} from '@codemirror/lang-css';
 import {python} from '@codemirror/lang-python';
 import {oneDark} from '@codemirror/theme-one-dark';
 export {state, view};
-export const apiVersion = 1;
+export const apiVersion = 2;
 const languages = {PLAIN: () => [], JAVA: java, JAVASCRIPT: javascript,
   TYPESCRIPT: () => javascript({typescript:true}), JSON: json, HTML: html, CSS: css, PYTHON: python};
 const themes = {LIGHT: [], DARK: oneDark};
@@ -94,3 +95,83 @@ export function focus(h) { h.view.focus(); }
 export function hasFocus(h) { return h.view.hasFocus; }
 export function measure(h) { h.view.requestMeasure(); }
 export function nativeView(h) { return h.view; }
+
+// A widget owns this private handle; there is no second public merge component.
+const mergeLight = view.EditorView.theme({"&":{backgroundColor:"#fff",color:"#202937"}});
+const mergeLayout = view.EditorView.baseTheme({
+  "&": {minHeight:"100%"},
+  "&.cm-editor": {height:"auto"},
+  ".cm-scroller": {overflowX:"auto"}
+});
+export function mergeCreate(parent, original, modified, mode, language, theme, readOnly, collapse, listener) {
+  const h = {split:null, editor:null, listener, readOnly};
+  const extensions = editable => [basicSetup, languages[language](), themes[theme], theme === "LIGHT" ? mergeLight : [], mergeLayout,
+    state.EditorState.readOnly.of(!editable), view.EditorView.editable.of(editable)];
+  const updates = view.EditorView.updateListener.of(u => {
+    if (u.docChanged && h.listener) h.listener(u.state.doc.toString());
+  });
+  const collapseUnchanged = collapse ? {margin:3,minSize:4} : undefined;
+  if (mode === 'SPLIT') {
+    h.split = new MergeView({parent,
+      a:{doc:original,extensions:extensions(false)},
+      b:{doc:modified,extensions:[extensions(!readOnly),updates]},
+      revertControls:readOnly ? undefined : 'a-to-b', collapseUnchanged,
+      renderRevertControl:() => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = '→';
+        button.title = 'Restore original text';
+        button.setAttribute('aria-label', button.title);
+        button.style.color = 'inherit';
+        // MergeView handles pointer mousedown; forward keyboard button activation too.
+        button.addEventListener('click', event => {
+          if (event.detail === 0) button.dispatchEvent(new MouseEvent('mousedown', {bubbles:true,cancelable:true}));
+        });
+        return button;
+      }});
+    h.editor = h.split.b;
+    // One scroll container keeps the two aligned documents together.
+    h.split.dom.style.height = '100%';
+    h.split.dom.style.overflow = 'auto';
+    h.split.dom.style.backgroundColor = theme === 'LIGHT' ? '#fff' : '#282c34';
+    h.split.dom.style.color = theme === 'LIGHT' ? '#202937' : '#abb2bf';
+  } else {
+    h.editor = new view.EditorView({parent,doc:modified,extensions:[extensions(!readOnly),layoutTheme,updates,
+      unifiedMergeView({original,mergeControls:!readOnly,collapseUnchanged})]});
+  }
+  return h;
+}
+export function mergeDestroy(h) {
+  h.listener = null;
+  if (h.split) h.split.destroy(); else h.editor.destroy();
+}
+export function mergeText(h, original) {
+  return original ? (h.split ? h.split.a.state.doc : getOriginalDoc(h.editor.state)).toString()
+    : h.editor.state.doc.toString();
+}
+export function mergeSetText(h, text, original) {
+  const editor = original && h.split ? h.split.a : h.editor;
+  if (original && !h.split) {
+    const doc = getOriginalDoc(editor.state);
+    const changes = state.ChangeSet.of({from:0,to:doc.length,insert:text},doc.length);
+    editor.dispatch({effects:originalDocChangeEffect(editor.state,changes)});
+  } else {
+    editor.dispatch({changes:{from:0,to:editor.state.doc.length,insert:text},annotations:isolateHistory.of('full')});
+  }
+}
+export function mergeCount(h) { return getChunks(h.editor.state).chunks.length; }
+export function mergeResolve(h, index, accept) {
+  const chunks = getChunks(h.editor.state).chunks;
+  if (h.readOnly || h.split || index < 0 || index >= chunks.length) return false;
+  return (accept ? acceptChunk : rejectChunk)(h.editor,chunks[index].fromB);
+}
+export function mergeCommand(h, name) {
+  if (name === 'next') return goToNextChunk(h.editor);
+  if (name === 'previous') return goToPreviousChunk(h.editor);
+  if (h.readOnly) return false;
+  return (name === 'undo' ? undo : redo)(h.editor);
+}
+export function mergeMeasure(h) {
+  h.editor.requestMeasure();
+  if (h.split) h.split.a.requestMeasure();
+}

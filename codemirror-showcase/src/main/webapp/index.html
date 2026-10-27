@@ -12,7 +12,12 @@
     <div><h1>CodeMirror Java</h1><p>CodeMirror 6 bindings for GWT and TeaVM</p></div>
     <nav aria-label="Project links"><a href="https://github.com/instanto-io/codemirror-java#readme">Documentation</a><a href="https://github.com/instanto-io/codemirror-java">Source ↗</a></nav>
   </header>
+  <div class="file-tabs modes" role="group" aria-label="Playground mode">
+    <button id="editor-mode" aria-pressed="true">Editor</button>
+    <button id="compare-mode" aria-pressed="false">Compare</button>
+  </div>
   <section class="workspace" aria-label="Code editor playground">
+    <div id="editor-screen">
     <div class="filebar">
       <div class="file-tabs" role="group" aria-label="Example document">
         <button id="java" aria-pressed="true" title="Load the Java example">Java</button>
@@ -41,6 +46,24 @@
         <div><button id="select">Select range</button><button id="save">Read text</button><button id="diagnostics">Add diagnostic</button><button id="clear">Clear diagnostics</button><button id="recreate">Recreate editor</button></div>
       </div>
     </details>
+    </div>
+    <div id="compare-screen" hidden>
+      <div class="toolbar">
+        <div role="group" aria-label="Comparison layout">
+          <button id="split" aria-pressed="true">Side by side</button>
+          <button id="unified" aria-pressed="false">Unified</button>
+        </div>
+        <div role="group" aria-label="Comparison commands">
+          <button id="previous-change">Previous change</button><button id="next-change">Next change</button>
+          <button id="compare-readonly" aria-pressed="false">Read-only</button>
+          <button id="collapse" aria-pressed="false">Collapse unchanged</button>
+          <button id="compare-theme">Light / dark</button><button id="reset-compare">Reset example</button>
+        </div>
+      </div>
+      <div class="comparison-labels"><span id="comparison-original">Original · Hello.java</span><span id="comparison-modified">Modified · Hello.java</span></div>
+      <div id="compare"></div>
+      <div class="statusbar"><span id="compare-status" role="status">Original is read-only; edit the modified document.</span></div>
+    </div>
   </section>
   <div class="feedback"><p id="status" role="status">Loading editor…</p><button id="retry-load" hidden>Retry loading</button></div>
   <p class="help">Search opens inside the editor. Completions appear beside the cursor; diagnostics appear in the gutter and under the affected text.</p>

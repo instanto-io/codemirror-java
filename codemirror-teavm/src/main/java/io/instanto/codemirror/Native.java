@@ -20,7 +20,7 @@ final class Native {
 
   @JsOverlay
   static boolean available() {
-    return jsinterop.base.Js.global().get("CodeMirrorTea") != null && apiVersion == 1;
+    return jsinterop.base.Js.global().get("CodeMirrorTea") != null && apiVersion == 2;
   }
 
   public static native Object create(
@@ -87,4 +87,34 @@ final class Native {
 
   @JsMethod(name = "nativeView")
   public static native Object view(Object h);
+
+  @JsFunction
+  interface MergeUpdate {
+    void accept(String value);
+  }
+
+  public static native Object mergeCreate(
+      Object parent,
+      String original,
+      String modified,
+      String mode,
+      String language,
+      String theme,
+      boolean readOnly,
+      boolean collapse,
+      MergeUpdate listener);
+
+  public static native void mergeDestroy(Object handle);
+
+  public static native String mergeText(Object handle, boolean original);
+
+  public static native void mergeSetText(Object handle, String value, boolean original);
+
+  public static native int mergeCount(Object handle);
+
+  public static native boolean mergeResolve(Object handle, int index, boolean accept);
+
+  public static native boolean mergeCommand(Object handle, String command);
+
+  public static native void mergeMeasure(Object handle);
 }

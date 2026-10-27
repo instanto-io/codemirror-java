@@ -237,6 +237,74 @@ public class ShowcaseIT {
     assertTrue(errors.toString(), errors.isEmpty());
   }
 
+  @Test
+  public void comparisonWidgetInteractions() {
+    load();
+    page.locator("#compare-mode").click();
+    assertEquals(2, page.locator("#compare .cm-editor").count());
+    assertEquals(
+        "false", page.locator("#compare .cm-content").first().getAttribute("contenteditable"));
+    assertEquals(
+        "true", page.locator("#compare .cm-content").last().getAttribute("contenteditable"));
+    page.locator("#compare .cm-merge-revert button").first().press("Enter");
+    assertTrue(
+        page.locator("#compare .cm-content").last().textContent().contains("Hello from TeaVM"));
+    page.locator("#reset-compare").click();
+    page.locator("#unified").click();
+    assertEquals(1, page.locator("#compare .cm-editor").count());
+    page.locator("#compare button[name=accept]").first().click();
+    page.locator("#compare button[name=reject]").first().click();
+    assertEquals(0, page.locator("#compare button[name=accept]").count());
+    page.locator("#reset-compare").click();
+    page.locator("#compare .cm-content").click();
+    page.keyboard().press("ControlOrMeta+A");
+    page.keyboard().insertText("// Edited through the merge widget");
+    page.locator("#editor-mode").click();
+    page.locator("#compare-mode").click();
+    assertTrue(
+        page.locator("#compare .cm-content")
+            .textContent()
+            .contains("Edited through the merge widget"));
+    page.locator("#reset-compare").click();
+    page.locator("#compare-readonly").click();
+    assertEquals("false", page.locator("#compare .cm-content").getAttribute("contenteditable"));
+    assertEquals(0, page.locator("#compare button[name=accept]").count());
+    page.locator("#compare-readonly").click();
+    page.locator("#collapse").click();
+    page.locator("#compare-theme").click();
+    assertEquals(
+        "rgb(255, 255, 255)",
+        page.locator("#compare .cm-editor").evaluate("e => getComputedStyle(e).backgroundColor"));
+    page.locator("#next-change").click();
+    page.locator("#previous-change").click();
+    for (int i = 0; i < 3; i++) {
+      page.locator("#editor-mode").click();
+      assertEquals(0, page.locator("#compare .cm-editor").count());
+      page.locator("#compare-mode").click();
+      assertEquals(1, page.locator("#compare .cm-editor").count());
+    }
+    page.screenshot(
+        new Page.ScreenshotOptions()
+            .setPath(Path.of("target/compare-" + engine + ".png"))
+            .setFullPage(true));
+    page.setViewportSize(390, 844);
+    assertEquals(true, page.evaluate("document.documentElement.scrollWidth <= innerWidth"));
+    page.locator("#split").click();
+    page.locator("#compare .cm-merge-revert button").first().waitFor();
+    assertEquals(
+        "rgb(32, 41, 55)",
+        page.locator("#compare .cm-merge-revert button")
+            .first()
+            .evaluate("e => getComputedStyle(e).color"));
+    assertEquals(true, page.evaluate("document.documentElement.scrollWidth <= innerWidth"));
+    page.screenshot(
+        new Page.ScreenshotOptions()
+            .setPath(Path.of("target/compare-mobile-" + engine + ".png"))
+            .setFullPage(true));
+    assertEquals(1, bundleRequests);
+    assertTrue(errors.toString(), errors.isEmpty());
+  }
+
   private String text() {
     return (String) page.evaluate("showcaseView.state.doc.toString()");
   }

@@ -60,3 +60,10 @@ body[data-theme=light] .workspace, body[data-theme=light] .toolbar, body[data-th
   #editor { height: 420px; }
   .statusbar { font-size: 10px; }
 }
+
+[hidden] { display: none !important; }
+.modes { margin-bottom: 10px; }
+#compare { height: clamp(330px, 58vh, 640px); }
+.comparison-labels { display: flex; justify-content: space-around; padding: 8px; font: 12px ui-monospace, monospace; }
+#compare > div { height: 100%; }
+@media (max-width: 600px) { #compare { height: 420px; } .comparison-labels { font-size: 10px; } }
