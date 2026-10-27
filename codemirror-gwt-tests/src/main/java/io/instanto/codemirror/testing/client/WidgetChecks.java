@@ -15,27 +15,61 @@ public final class WidgetChecks {
     check(
         widget.getElement().getStyle().getProperty("height").equals("200px"), "widget CSS height");
     widget.setValue("before attachment");
+    widget.setLanguage(Language.JAVA);
+    widget.setTheme(Theme.DARK);
+    widget.setTabSize(2);
+    widget.setLineWrapping(true);
+    int[] updates = {0};
+    Subscription subscription =
+        widget.onUpdate(
+            u -> {
+              if (u.documentChanged()) updates[0]++;
+            });
     int[] events = {0};
     var registration = widget.addValueChangeHandler(e -> events[0]++);
     RootPanel.get().add(widget);
     try {
-      check(widget.getEditor().getText().equals("before attachment"), "initial value");
+      check(widget.getText().equals("before attachment"), "initial value");
       widget.setValue("silent");
       check(events[0] == 0, "silent setValue");
       widget.setValue("notified", true);
       check(events[0] == 1, "requested value event");
-      widget.getEditor().replace(0, 8, "edited");
+      widget.replace(0, 8, "edited");
       check(events[0] == 2 && widget.getValue().equals("edited"), "native edit event");
       registration.removeHandler();
-      widget.getEditor().setText("retained");
+      widget.setText("retained");
       check(events[0] == 2, "handler removal");
-      Editor prior = widget.getEditor();
+      Object prior = widget.nativeView();
       RootPanel.get().remove(widget);
-      check(prior.isClosed(), "detach releases native editor");
+      check(widget.getElement().getChildCount() == 0, "detach releases native editor");
       RootPanel.get().add(widget);
       check(
-          widget.getEditor() != prior && widget.getValue().equals("retained"),
+          widget.nativeView() != prior && widget.getValue().equals("retained"),
           "reattach restores value");
+      int previousUpdates = updates[0];
+      widget.replace(0, widget.length(), "reattached");
+      check(updates[0] == previousUpdates + 1, "one update subscription across reattach");
+      subscription.close();
+      subscription.close();
+      widget.setText("unsubscribed");
+      check(updates[0] == previousUpdates + 1, "remove retained update subscription");
+      widget.setReadOnly(true);
+      RootPanel.get().remove(widget);
+      check(!widget.hasFocus(), "detached focus");
+      widget.requestMeasure();
+      widget.setLanguage(Language.JSON);
+      widget.setText("{\"retained\": true}");
+      RootPanel.get().add(widget);
+      check(
+          widget.getElement().getInnerHTML().contains("contenteditable=\"false\""),
+          "read-only retained");
+      check(widget.getElement().getInnerHTML().contains("cm-lineWrapping"), "wrapping retained");
+      check(widget.getText().equals("{\"retained\": true}"), "detached text updates");
+      widget.setReadOnly(false);
+      widget.setValue("silent again");
+      check(
+          updates[0] == previousUpdates + 1,
+          "removed listener stays removed after another attachment");
       widget.onResize();
     } finally {
       RootPanel.get().remove(widget);

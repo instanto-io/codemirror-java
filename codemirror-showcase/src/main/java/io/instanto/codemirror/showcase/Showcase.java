@@ -10,7 +10,7 @@ public final class Showcase {
   private static final HTMLDocument DOC = HTMLDocument.current();
   private static final String SAMPLE =
       "public class Hello {\n    public static void main(String[] args) {\n        System.out.println(\"Hello from TeaVM\");\n    }\n}\n";
-  private static Editor editor;
+  private static CodeMirrorWidget editor;
   private static CodeMirrorMergeWidget comparison;
   private static boolean compareDark = true;
   private static final String MODIFIED =
@@ -146,10 +146,11 @@ public final class Showcase {
     on(
         "recreate",
         () -> {
-          String text = editor.getText();
-          editor.close();
-          mount(text);
-          status("Disposed the previous view and mounted a fresh editor");
+          editor.removeFromParent();
+          com.google.gwt.user.client.ui.RootPanel.get("editor").add(editor);
+          el("position").setTextContent("Offset 0 · revision 0");
+          expose(jsinterop.base.Js.uncheckedCast(editor.nativeView()));
+          status("Detached and reattached the widget; text and configuration retained");
         });
     on("save", () -> status("Read " + editor.length() + " UTF-16 code units from Java"));
     on(
@@ -214,9 +215,9 @@ public final class Showcase {
 
   private static void mount(String text) {
     editor =
-        Editor.mount(
-            jsinterop.base.Js.<elemental2.dom.HTMLElement>uncheckedCast(el("editor")),
+        new CodeMirrorWidget(
             new EditorOptions(text, language, dark ? Theme.DARK : Theme.LIGHT, readOnly, 4, false));
+    editor.setSize("100%", "100%");
     editor.setCompletionSource(
         context -> {
           if (!context.explicit() && context.wordFrom() == context.position()) return null;
@@ -242,6 +243,7 @@ public final class Showcase {
               .setTextContent(
                   "Offset " + update.selection().head() + " · revision " + update.revision());
         });
+    com.google.gwt.user.client.ui.RootPanel.get("editor").add(editor);
     el("position").setTextContent("Offset 0 · revision 0");
     expose(jsinterop.base.Js.uncheckedCast(editor.nativeView()));
   }

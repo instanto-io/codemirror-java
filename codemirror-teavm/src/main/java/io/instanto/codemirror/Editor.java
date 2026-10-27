@@ -1,12 +1,10 @@
 package io.instanto.codemirror;
 
-import elemental2.dom.HTMLElement;
 import java.util.*;
 import java.util.function.Consumer;
 
-/** A mounted CodeMirror 6 view. The owner must close it before removing its container. */
-public final class Editor implements AutoCloseable {
-  public static final String ASSET_PATH = "webjars/codemirror-teavm/0.1.0/codemirror-teavm.js";
+/** Internal native-view owner; applications use CodeMirrorWidget. */
+final class Editor implements AutoCloseable {
   private Object handle;
   private final List<Consumer<EditorUpdate>> listeners = new ArrayList<>();
   private boolean notifying;
@@ -31,14 +29,6 @@ public final class Editor implements AutoCloseable {
 
   public static boolean isAvailable() {
     return Native.available();
-  }
-
-  public static Editor mount(HTMLElement parent, EditorOptions options) {
-    return new Editor(parent, options);
-  }
-
-  public static Editor mount(HTMLElement parent) {
-    return mount(parent, EditorOptions.defaults());
   }
 
   /** Mount in a GWT DOM element, using the same native editor lifecycle. */

@@ -10,15 +10,21 @@ import java.util.function.Consumer;
 
 /** Loads the complete editor bundle, including languages, themes and injected styles. */
 public final class CodeMirrorResources {
-  private static String scriptUrl = Editor.ASSET_PATH;
+  public static final String ASSET_PATH = "webjars/codemirror-teavm/0.1.0/codemirror-teavm.js";
+  private static String scriptUrl = ASSET_PATH;
   private static boolean loading;
   private static final List<Request> pending = new ArrayList<>();
 
   private CodeMirrorResources() {}
 
+  /** Whether the supported browser bundle has loaded. */
+  public static boolean isAvailable() {
+    return Native.available();
+  }
+
   /** Set a page-relative or absolute bundle URL before loading, or after a failed attempt. */
   public static void setScriptUrl(String url) {
-    if (loading || Editor.isAvailable())
+    if (loading || isAvailable())
       throw new IllegalStateException("Editor resources are already loading or loaded");
     if (url == null || url.trim().isEmpty())
       throw new IllegalArgumentException("Empty editor script URL");
@@ -31,7 +37,7 @@ public final class CodeMirrorResources {
    */
   public static void whenReady(Runnable ready, Consumer<Throwable> failed) {
     Request request = new Request(Objects.requireNonNull(ready), Objects.requireNonNull(failed));
-    if (Editor.isAvailable()) {
+    if (isAvailable()) {
       deliver(request, null);
       return;
     }
@@ -47,7 +53,7 @@ public final class CodeMirrorResources {
                 @Override
                 public void onSuccess(Void ignored) {
                   finish(
-                      Editor.isAvailable()
+                      isAvailable()
                           ? null
                           : new IllegalStateException(
                               "Script did not provide the supported CodeMirror Java API: "

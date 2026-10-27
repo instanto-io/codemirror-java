@@ -1,6 +1,6 @@
 package io.instanto.codemirror;
 
-/** Immutable initial configuration. Runtime changes use Editor methods and preserve history. */
+/** Immutable initial configuration. Runtime changes use widget methods and preserve history. */
 public record EditorOptions(
     String text,
     Language language,

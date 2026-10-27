@@ -1,14 +1,14 @@
 package io.instanto.codemirror.testing.client;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.user.client.ui.RootPanel;
 import elemental2.dom.DomGlobal;
-import elemental2.dom.HTMLElement;
 import io.instanto.codemirror.*;
 import java.util.List;
 
 public class Entry implements EntryPoint {
   public void onModuleLoad() {
-    CodeMirrorResources.setScriptUrl(Editor.ASSET_PATH + "?gwt-contract");
+    CodeMirrorResources.setScriptUrl(CodeMirrorResources.ASSET_PATH + "?gwt-contract");
     CodeMirrorResources.whenReady(
         this::start, error -> DomGlobal.document.body.setAttribute("data-error", error.toString()));
     CodeMirrorResources.whenReady(
@@ -18,10 +18,12 @@ public class Entry implements EntryPoint {
   private void start() {
     try {
       WidgetChecks.run();
-      Editor editor = Editor.mount((HTMLElement) DomGlobal.document.getElementById("editor"));
+      CodeMirrorWidget editor = new CodeMirrorWidget();
+      editor.setSize("100%", "100%");
       editor.setLanguage(Language.JAVA);
       editor.setTheme(Theme.DARK);
       editor.setText("class Hello {}");
+      RootPanel.get("editor").add(editor);
       int[] changes = {0};
       Subscription listener =
           editor.onUpdate(
@@ -56,6 +58,9 @@ public class Entry implements EntryPoint {
                           "System.out.println()",
                           Completion.Kind.FUNCTION,
                           "Java callback"))));
+      editor.removeFromParent();
+      RootPanel.get("editor").add(editor);
+      editor.setSelection(new Selection(3, 3));
       editor.focus();
       editor.startCompletion();
       DomGlobal.document
@@ -64,8 +69,8 @@ public class Entry implements EntryPoint {
               "click",
               e -> {
                 listener.close();
-                editor.close();
-                editor.close();
+                editor.removeFromParent();
+                editor.removeFromParent();
                 require(
                     DomGlobal.document.getElementById("editor").childNodes.length == 0, "dispose");
                 DomGlobal.document.body.setAttribute("data-disposed", "true");

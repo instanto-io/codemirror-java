@@ -1,8 +1,8 @@
 package io.instanto.codemirror.showcase;
 
+import com.google.gwt.user.client.ui.RootPanel;
 import io.instanto.codemirror.*;
 import java.util.List;
-import org.teavm.jso.dom.html.HTMLDocument;
 
 /** Browser-executed contracts call the real compiled Java API, never a mock. */
 final class Contracts {
@@ -10,12 +10,11 @@ final class Contracts {
 
   static void run() {
     io.instanto.codemirror.testing.client.WidgetChecks.run();
-    var parent = HTMLDocument.current().createElement("div");
-    HTMLDocument.current().getBody().appendChild(parent);
-    Editor editor =
-        Editor.mount(
-            jsinterop.base.Js.<elemental2.dom.HTMLElement>uncheckedCast(parent),
+    CodeMirrorWidget editor =
+        new CodeMirrorWidget(
             new EditorOptions("a😀b\nsecond", Language.JAVA, Theme.LIGHT, false, 4, false));
+    editor.setSize("400px", "200px");
+    RootPanel.get().add(editor);
     try {
       check(editor.length() == 11, "UTF-16 length");
       editor.setSelection(new Selection(3, 1));
@@ -102,6 +101,11 @@ final class Contracts {
       check(
           hasTestAttribute(jsinterop.base.Js.uncheckedCast(editor.nativeView())),
           "custom extension applied");
+      editor.removeFromParent();
+      RootPanel.get().add(editor);
+      check(
+          hasTestAttribute(jsinterop.base.Js.uncheckedCast(editor.nativeView())),
+          "custom extension retained");
       editor.setExtensions(emptyExtensions());
       check(
           !hasTestAttribute(jsinterop.base.Js.uncheckedCast(editor.nativeView())),
@@ -114,25 +118,25 @@ final class Contracts {
       editor.setReadOnly(true);
       editor.setText("API write");
       check(editor.getText().equals("API write"), "read-only permits programmatic updates");
-      editor.close();
-      editor.close();
-      check(editor.isClosed(), "idempotent close");
+      editor.removeFromParent();
+      editor.removeFromParent();
+      check(!editor.isAttached(), "idempotent detach");
+      check(editor.getText().equals("API write"), "detached text retained");
       try {
-        editor.getText();
-        throw new AssertionError("closed access accepted");
+        editor.undo();
+        throw new AssertionError("detached command accepted");
       } catch (IllegalStateException expected) {
       }
-      check(parent.getChildNodes().getLength() == 0, "view DOM removed");
+      check(editor.getElement().getChildCount() == 0, "view DOM removed");
       for (int i = 0; i < 3; i++) {
-        var fresh =
-            Editor.mount(jsinterop.base.Js.<elemental2.dom.HTMLElement>uncheckedCast(parent));
-        fresh.setText("fresh");
-        check(fresh.undoDepth() == 1, "fresh history");
-        fresh.close();
+        RootPanel.get().add(editor);
+        check(editor.undoDepth() == 0, "fresh history");
+        editor.setText("fresh " + i);
+        check(editor.undoDepth() == 1, "new history step");
+        editor.removeFromParent();
       }
     } finally {
-      editor.close();
-      parent.getParentNode().removeChild(parent);
+      editor.removeFromParent();
     }
   }
 

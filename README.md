@@ -21,11 +21,11 @@ keyboard editing, syntax highlighting, selection and undo history. Your Java
 application supplies the document and decides what to do with changes: save them,
 validate them, or use them elsewhere in the UI.
 
-The Java API wraps common CodeMirror operations in types such as `Editor`,
+The Java API wraps common CodeMirror operations in types such as `CodeMirrorWidget`,
 `Selection`, `Completion` and `Diagnostic`. For these features, you work with Java
 methods and callbacks instead of constructing CodeMirror's JavaScript state and
-view objects yourself. `CodeMirrorWidget` adds GWT panel integration, sizing and
-value-change events for applications built around widgets. `CodeMirrorMergeWidget`
+view objects yourself. `CodeMirrorWidget` provides editing operations, panel
+integration, sizing and value-change events directly. `CodeMirrorMergeWidget`
 provides side-by-side and unified comparison, with editing and merge controls.
 
 We maintain one GWT/JsInterop source API for both compiler targets. The GWT build
@@ -94,8 +94,8 @@ The container has a height so there is visible space for the editor.
 
 In the entry point, ask `CodeMirrorResources` to load the editor bundle. Its first
 callback runs when the editor is ready to create; the second lets your application
-show a useful message if loading fails. `Editor.mount(...)` then creates the
-editor inside the container and returns the Java object used to control it.
+show a useful message if loading fails. Create a `CodeMirrorWidget`, configure
+it, then add it to a panel. Attachment creates the native editor automatically.
 
 The bundle must be available on your website for this to work. The
 [browser assets section](#browser-assets) explains how to arrange that during
@@ -104,18 +104,21 @@ your build.
 ```java
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Document;
-import io.instanto.codemirror.Editor;
+import com.google.gwt.user.client.ui.RootPanel;
+import io.instanto.codemirror.CodeMirrorWidget;
 import io.instanto.codemirror.Language;
 import io.instanto.codemirror.CodeMirrorResources;
 
 public final class App implements EntryPoint {
-  private Editor editor;
+  private CodeMirrorWidget editor;
 
   @Override public void onModuleLoad() {
     CodeMirrorResources.whenReady(() -> {
-      editor = Editor.mount(Document.get().getElementById("editor"));
+      editor = new CodeMirrorWidget();
+      editor.setSize("100%", "100%");
       editor.setLanguage(Language.JAVA);
       editor.setText("class Hello {}");
+      RootPanel.get("editor").add(editor);
     }, error -> Document.get().getElementById("editor")
         .setInnerText("Unable to load editor: " + error.getMessage()));
   }
@@ -123,8 +126,8 @@ public final class App implements EntryPoint {
 ```
 
 Register your fully qualified `App` class as an `<entry-point>` in the application's
-GWT module. Close the editor when its owning screen is disposed. For managed
-attachment/detachment, use [CodeMirrorWidget](#widget-lifecycle).
+GWT module. Remove the widget from its panel when its screen is disposed; the
+widget releases its native view automatically. See [widget lifecycle](#widget-lifecycle).
 A working compiler configuration and browser contract page are in
 [codemirror-gwt-tests](codemirror-gwt-tests/pom.xml).
 
@@ -181,26 +184,29 @@ into the website as explained under [Browser assets](#browser-assets).
 
 ```java
 import com.google.gwt.dom.client.Document;
-import io.instanto.codemirror.Editor;
+import com.google.gwt.user.client.ui.RootPanel;
+import io.instanto.codemirror.CodeMirrorWidget;
 import io.instanto.codemirror.Language;
 import io.instanto.codemirror.CodeMirrorResources;
 
 public final class App {
-  private static Editor editor;
+  private static CodeMirrorWidget editor;
 
   public static void main(String[] args) {
     CodeMirrorResources.whenReady(() -> {
-      editor = Editor.mount(Document.get().getElementById("editor"));
+      editor = new CodeMirrorWidget();
+      editor.setSize("100%", "100%");
       editor.setLanguage(Language.JAVA);
       editor.setText("class Hello {}");
+      RootPanel.get("editor").add(editor);
     }, error -> Document.get().getElementById("editor")
         .setInnerText("Unable to load editor: " + error.getMessage()));
   }
 }
 ```
 
-`Document` above comes from `io.instanto:gwt-user-compat`. The same `Editor` and
-`CodeMirrorWidget` APIs are available on both platforms. The JavaScript target is
+`Document` and `RootPanel` above come from `io.instanto:gwt-user-compat`.
+The same `CodeMirrorWidget` API is available on both platforms. The JavaScript target is
 verified; WebAssembly is outside the current tested scope.
 
 ## Browser assets
@@ -272,8 +278,8 @@ facility instead of copying them into a static output folder.
 ### Load the editor when your screen needs it
 
 Once the files are served by your website, call
-`CodeMirrorResources.whenReady(ready, failed)` before mounting an `Editor` or
-attaching a `CodeMirrorWidget`. The loader downloads the bundle and checks that
+`CodeMirrorResources.whenReady(ready, failed)` before attaching a
+`CodeMirrorWidget` or `CodeMirrorMergeWidget`. The loader downloads the bundle and checks that
 it provides the supported editor API. It then calls `ready`, where your code can
 create and configure the editor, or `failed`, where it can explain the problem
 to the user and offer a retry.
@@ -292,7 +298,7 @@ CodeMirrorResources.setScriptUrl(
 
 Several screens can request the resources at once: their requests share one
 download. Callbacks run asynchronously, including when the bundle is already
-available. A later call can retry a failed load. `Editor.isAvailable()` lets you
+available. A later call can retry a failed load. `CodeMirrorResources.isAvailable()` lets you
 check availability without starting a download.
 
 ### Give the editor space in your layout
@@ -307,24 +313,20 @@ in your page styling, or use `CodeMirrorWidget.setSize(...)` when working with
 widgets. This lets the editor fit into your existing form or panel layout while
 CodeMirror handles the contents of the editing area.
 
-## Widgets and direct DOM use
+## Widgets
 
-For screens built from GWT widgets, use `CodeMirrorWidget` for editing and
-`CodeMirrorMergeWidget` for comparison. These same widgets work with both GWT
-and TeaVM through `gwt-user-compat`. Their panel owns attachment, sizing and
-removal, and their `HasValue<String>` API provides the editable document and
-value-change events.
+Use `CodeMirrorWidget` for editing and `CodeMirrorMergeWidget` for comparison.
+The same widgets work with GWT and TeaVM through `gwt-user-compat`. Their panel
+owns attachment, sizing and removal, and their `HasValue<String>` API provides
+the editable document and value-change events.
 
-`Editor` is the existing lower-level API for applications that manage DOM
-containers directly. It is not a separate platform implementation or a second
-screen component that an application must create. `CodeMirrorWidget` owns one
-internally and exposes its advanced editing operations through `getEditor()`
-while attached. The merge widget exposes its operations directly, with no
-separate public merge-editor class.
+All editing operations are directly on `CodeMirrorWidget`: text, selections,
+undo/redo, search, completion, diagnostics, configuration and update listeners.
+The native editor owner is an internal implementation detail.
 
-Load `CodeMirrorResources` before attaching a widget or directly mounting an
-editor. `EditorOptions` supplies the editing widget's initial text, language,
-theme, read-only state, tab size and wrapping.
+Load `CodeMirrorResources` before attaching a widget. You can configure a widget
+before attachment through setters or supply `EditorOptions` for its initial text,
+language, theme, read-only state, tab size and wrapping.
 
 ## Diff and merge
 
@@ -381,10 +383,11 @@ conflict resolution and saving the result belong to the application.
 
 ## Shared API
 
-Once an editor is mounted, the following operations work on both compiler targets.
-The examples build from ordinary text editing to application-supplied completion
-and diagnostics. They use `editor` for an existing `Editor` instance; when using
-a widget, obtain that instance with `widget.getEditor()` while it is attached.
+The examples below use `editor` for a `CodeMirrorWidget` and work on both compiler
+targets. Configure text, language, theme, wrapping, tab size, read-only state,
+completion sources, extensions and update listeners before or after attachment.
+Selection, edits to ranges, history, search, diagnostics, focus and native-view
+access require an attached widget; otherwise they throw `IllegalStateException`.
 
 ### Widget lifecycle
 
@@ -406,12 +409,17 @@ CodeMirrorResources.whenReady(() -> {
 Import `RootPanel` from `com.google.gwt.user.client.ui`; `saveText` and
 `showLoadError` are your application callbacks. `setValue`
 is silent by default; `setValue(text, true)` fires a value-change event when the
-value changes. User edits also fire events. `getEditor()` provides the editor API
-while attached. Detaching disposes the native editor; reattaching creates a new
-editor with the retained text. History is not retained across detachments.
-`onResize()` asks CodeMirror to measure its container again.
+value changes. User edits and `setText(...)` also fire value-change events when
+the value changes. `getText()` and `getValue()` read the same document.
 
-The lower-level `Editor.mount` also accepts an Elemental2 `HTMLElement`.
+Detaching disposes the native editor. Reattaching restores the retained text,
+configuration, completion provider, extensions and update subscriptions without
+registering duplicate callbacks. Selection, history, search state, diagnostics and
+revision reset for the new view. Discard pending validation results when a screen
+is detached, even if their revision number matches a later view.
+
+`onResize()` and `requestMeasure()` ask an attached editor to measure its container;
+they do nothing while detached. `hasFocus()` returns `false` while detached.
 
 ### Read and change the document
 
@@ -454,7 +462,11 @@ Subscription subscription = editor.onUpdate(update -> {
 ```
 
 Updates identify document and selection changes, the current selection and the
-document revision. Close the subscription to remove that listener. Callbacks run
+document revision. Subscriptions survive detach/reattach; close a subscription to
+remove that listener permanently. `onUpdate` observes native document transactions
+and selection changes, including attached `setValue` calls even when value-change
+events are suppressed. Detached text changes have no native update to report.
+Callbacks run
 during a native view update: read state there, and schedule any editor mutation
 or disposal after the callback returns, using GWT `Scheduler.get().scheduleDeferred(...)` or TeaVM
 `org.teavm.jso.browser.Window.setTimeout(...)`.
@@ -537,22 +549,19 @@ move with edits, but the application should recompute or clear results when
 their meaning becomes stale. `clearDiagnostics()` removes them and
 `diagnosticCount()` reports their number.
 
-### Dispose of the editor
+### Remove the widget
 
-When your screen owns an `Editor` directly, it also owns its lifetime. Close any
-listener you no longer need, and close the editor before removing its container.
-A `CodeMirrorWidget` performs editor disposal when the widget is detached.
+The containing panel manages the widget's lifetime. Close subscriptions that your
+application no longer needs and remove the widget from its parent:
 
 ```java
 subscription.close();
-editor.close();
+editor.removeFromParent();
 ```
 
-The editor owns the DOM it creates; the application owns the container. Close
-the editor before removing that container. `close()` is terminal and safe to
-call repeatedly; it discards history and registrations. Mount a new editor to
-recreate the view, restoring application-held text and configuration as needed.
-Call `requestMeasure()` after showing an editor that was hidden.
+Removal disposes the native view automatically. The widget can be added again
+later with its text and configuration retained. Call `requestMeasure()` after
+showing a widget that was hidden without detaching it.
 
 ## Implemented scope
 
@@ -561,7 +570,7 @@ Unicode offsets, selections, configuration changes, history, search/replace,
 Java completion, diagnostics, listeners and disposal. Shared widget checks run
 on GWT 2.13.1 and TeaVM, covering sizing, events, handler removal and reattachment.
 The GWT build also checks editing, selection, history, search, diagnostics and
-Java completion. Shared merge-widget checks cover split/unified comparison,
+Java completion through the widget API, including completion after reattachment. Shared merge-widget checks cover split/unified comparison,
 accept/reject, empty documents, Unicode, final-line changes, read-only commands,
 value events and detach/reattach. The showcase also exercises the comparison
 controls in both browser engines. TeaVM tests run in both standard and optimized builds.
