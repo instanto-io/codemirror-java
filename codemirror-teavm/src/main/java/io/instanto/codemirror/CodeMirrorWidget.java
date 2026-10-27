@@ -26,6 +26,10 @@ public final class CodeMirrorWidget extends Composite
   private boolean readOnly, lineWrapping;
   private int tabSize;
   private CompletionSource completionSource;
+  private AsyncCompletionSource asyncCompletionSource;
+  private List<KeyBinding> keyBindings = List.of();
+  private HoverSource hoverSource;
+  private EditorTheme customTheme;
   private Object extensions;
   private final List<Consumer<EditorUpdate>> listeners = new ArrayList<>();
   private Editor editor;
@@ -56,6 +60,10 @@ public final class CodeMirrorWidget extends Composite
             new EditorOptions(value, language, theme, readOnly, tabSize, lineWrapping));
     value = editor.getText();
     if (completionSource != null) editor.setCompletionSource(completionSource);
+    if (asyncCompletionSource != null) editor.setAsyncCompletionSource(asyncCompletionSource);
+    if (!keyBindings.isEmpty()) editor.setKeyBindings(keyBindings);
+    if (hoverSource != null) editor.setHoverSource(hoverSource);
+    if (customTheme != null) editor.setCustomTheme(customTheme);
     if (extensions != null) editor.setExtensions(extensions);
     editor.onUpdate(
         update -> {
@@ -176,6 +184,7 @@ public final class CodeMirrorWidget extends Composite
   public void setCompletionSource(CompletionSource source) {
     if (editor != null) editor.setCompletionSource(source);
     completionSource = source;
+    asyncCompletionSource = null;
   }
 
   /** Retains native extensions built from this bundle's state/view exports across attachments. */
@@ -310,5 +319,82 @@ public final class CodeMirrorWidget extends Composite
   @Override
   public void onResize() {
     if (editor != null) editor.requestMeasure();
+  }
+
+  /** All ranges in document order; CodeMirror merges overlapping ranges. Requires attachment. */
+  public List<Selection> getSelections() {
+    return attached().getSelections();
+  }
+
+  public int getMainSelectionIndex() {
+    return attached().getMainSelectionIndex();
+  }
+
+  public void setSelections(List<Selection> ranges, int mainIndex) {
+    attached().setSelections(ranges, mainIndex);
+  }
+
+  /** Run a built-in editing, folding, navigation or snippet command. Requires attachment. */
+  public boolean execute(EditorCommand command) {
+    return attached().execute(command);
+  }
+
+  /** Replaces custom shortcuts. Retained across attachments; these override default bindings. */
+  public void setKeyBindings(List<KeyBinding> bindings) {
+    List<KeyBinding> next = List.copyOf(bindings);
+    if (editor != null) editor.setKeyBindings(next);
+    keyBindings = next;
+  }
+
+  /** Replaces the synchronous source. A null source restores language defaults. */
+  public void setAsyncCompletionSource(AsyncCompletionSource source) {
+    if (editor != null) editor.setAsyncCompletionSource(source);
+    asyncCompletionSource = source;
+    completionSource = null;
+  }
+
+  /** Insert a CodeMirror snippet with numbered placeholders. Requires attachment. */
+  public void insertSnippet(String template, int from, int to) {
+    attached().insertSnippet(template, from, to);
+  }
+
+  /** Apply a current diagnostic fix. Invalid indices or read-only state return false. */
+  public boolean applyDiagnosticFix(int diagnosticIndex, int actionIndex) {
+    return attached().applyDiagnosticFix(diagnosticIndex, actionIndex);
+  }
+
+  /** Configure plain-text hover help; null disables it. Retained across attachments. */
+  public void setHoverSource(HoverSource source) {
+    if (editor != null) editor.setHoverSource(source);
+    hoverSource = source;
+  }
+
+  /**
+   * Replace highlighted ranges if their revision is current. Ranges map through subsequent edits.
+   */
+  public boolean setHighlights(int expectedRevision, List<TextHighlight> highlights) {
+    return attached().setHighlights(expectedRevision, highlights);
+  }
+
+  public void clearHighlights() {
+    attached().setHighlights(revision(), List.of());
+  }
+
+  /** Replace line markers if their revision is current. Positions map through subsequent edits. */
+  public boolean setGutterMarks(int expectedRevision, List<GutterMark> marks) {
+    return attached().setGutterMarks(expectedRevision, marks);
+  }
+
+  public void clearGutterMarks() {
+    attached().setGutterMarks(revision(), List.of());
+  }
+
+  /**
+   * Overlay the base theme's chrome colors; null restores the base theme. Retained across
+   * attachments.
+   */
+  public void setCustomTheme(EditorTheme theme) {
+    if (editor != null) editor.setCustomTheme(theme);
+    customTheme = theme;
   }
 }

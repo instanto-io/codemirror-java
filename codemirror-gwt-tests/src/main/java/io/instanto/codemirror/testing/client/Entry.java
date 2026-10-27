@@ -18,6 +18,7 @@ public class Entry implements EntryPoint {
   private void start() {
     try {
       WidgetChecks.run();
+      FeatureChecks.installLauncher();
       CodeMirrorWidget editor = new CodeMirrorWidget();
       editor.setSize("100%", "100%");
       editor.setLanguage(Language.JAVA);

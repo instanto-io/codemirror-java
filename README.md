@@ -373,8 +373,10 @@ Changed-block indices are transient and must be re-evaluated after edits or merg
 Missing indices and read-only views return `false` from accept/reject. These two
 methods require unified mode; split mode provides its own revert controls.
 
-Changing mode, language, theme, read-only state or collapse settings rebuilds the
-view, retaining both documents but resetting selection and undo history. Detaching
+Changing mode, language, theme, read-only state or collapse settings preserves both
+documents, the modified document's selection, and its undo/redo history. Use
+`getSelection()` / `setSelection(...)` on the merge widget to read or move that
+selection. Detaching
 releases all native views and retains both texts, including accepted changes, for
 reattachment. Call `onResize()` when a container changes size or becomes visible.
 
@@ -413,8 +415,10 @@ value changes. User edits and `setText(...)` also fire value-change events when
 the value changes. `getText()` and `getValue()` read the same document.
 
 Detaching disposes the native editor. Reattaching restores the retained text,
-configuration, completion provider, extensions and update subscriptions without
-registering duplicate callbacks. Selection, history, search state, diagnostics and
+configuration, synchronous or asynchronous completion provider, key bindings,
+hover provider, custom theme, extensions and update subscriptions without
+registering duplicate callbacks. Selection, history, search state, diagnostics,
+highlights, gutter markers and
 revision reset for the new view. Discard pending validation results when a screen
 is detached, even if their revision number matches a later view.
 
@@ -437,8 +441,17 @@ String selected = editor.getSelectedText();
 ```
 
 Offsets count UTF-16 code units, like Java `String` indexes. End positions are
-exclusive. A `Selection` stores its anchor and head, preserving its direction;
-the typed API exposes the main selection.
+exclusive. A `Selection` stores its anchor and head, preserving its direction.
+`getSelection()` reads the main selection. To work with multiple selections:
+
+```java
+editor.setSelections(java.util.List.of(new Selection(0, 5), new Selection(6, 11)), 1);
+java.util.List<Selection> ranges = editor.getSelections();
+int mainIndex = editor.getMainSelectionIndex();
+```
+
+The index identifies the main range in the supplied list. CodeMirror sorts ranges
+and merges overlaps; read the normalized list and main index back afterward.
 
 `applyEdits(List<TextEdit>)` applies a batch as one transaction and one undo step.
 Ranges refer to the original document and must be ordered and non-overlapping.
@@ -501,6 +514,33 @@ The third argument enables regular expressions. Invalid or empty queries return
 `false` and leave the previous query intact. `findPrevious()` searches backwards.
 `openSearchPanel()` opens the search/replace UI; `closeSearchPanel()` closes it.
 
+### Commands and keyboard shortcuts
+
+Use `execute(EditorCommand)` for folding, commenting, indentation, navigation,
+selection, undo/redo and snippet-field navigation. Commands return whether they
+handled the request and require attachment.
+
+```java
+editor.execute(EditorCommand.FOLD_ALL);
+editor.execute(EditorCommand.UNFOLD_ALL);
+editor.execute(EditorCommand.TOGGLE_COMMENT);
+editor.execute(EditorCommand.DOCUMENT_END);
+editor.setKeyBindings(java.util.List.of(
+    new KeyBinding("Mod-Shift-l", EditorCommand.TOGGLE_COMMENT),
+    new KeyBinding("Mod-s", () -> saveText(editor.getValue()))));
+```
+
+`EditorCommand` also includes `FOLD`, `UNFOLD`, `LINE_START`, `LINE_END`,
+`DOCUMENT_START`, `SELECT_LINE`, `SELECT_ALL`, `INDENT_MORE`, `INDENT_LESS`,
+`NEWLINE_AND_INDENT`, `DELETE_LINE`, `UNDO`, `REDO`, `NEXT_SNIPPET_FIELD` and
+`PREVIOUS_SNIPPET_FIELD`. Folding and commenting depend on language support.
+
+Key names use CodeMirror notation: `Mod` means Command on macOS and Control on
+other platforms. Custom bindings override default shortcuts; Java actions consume
+the key. `setKeyBindings(...)` replaces the complete custom list; an empty list
+restores the defaults. Bindings can be configured before attachment and survive
+reattachment.
+
 ### Supply completion results
 
 A Java completion provider lets you offer suggestions from your application's
@@ -524,6 +564,48 @@ range and plain-text proposals, or `null` for no result. Providers run
 synchronously and should return promptly. The suggested boundary uses ASCII
 word characters and `$`; supply your own range for other identifier rules.
 `setCompletionSource(null)` restores the language's default completion source.
+
+### Asynchronous completion and snippets
+
+For suggestions from a service or delayed computation, install an
+`AsyncCompletionSource`. It replaces the synchronous provider and returns an
+optional cancellation subscription. This example uses a GWT `Timer`, which is
+also provided by `gwt-user-compat` on TeaVM:
+
+```java
+editor.setAsyncCompletionSource((context, complete) -> {
+  com.google.gwt.user.client.Timer timer = new com.google.gwt.user.client.Timer() {
+    @Override public void run() {
+      complete.accept(new CompletionResult(context.wordFrom(), context.position(),
+          java.util.List.of(Completion.snippet("println",
+              "System.out.println(${1:value});${0}", "Print statement",
+              "Print a value. Tab moves between editable fields."))));
+    }
+  };
+  timer.schedule(150);
+  return timer::cancel;
+});
+```
+
+Deliver at most one result; `complete.accept(null)` reports no suggestions. Handle
+service errors in the provider and report no result when appropriate. Return
+`null` if the work cannot be cancelled. Requests are cancelled on document edits,
+provider replacement, completion abort or detachment; late results are ignored.
+Completion ranges refer to the request's document snapshot. Each provider setter
+replaces the other kind; setting either to `null` restores language defaults.
+
+`Completion` accepts plain-text documentation in addition to its short detail.
+`Completion.snippet(...)` uses CodeMirror placeholders such as `${1:name}`,
+`${2:value}` and the final `${0}` cursor stop. Documentation is displayed literally,
+with no HTML interpretation. A snippet can also be inserted directly:
+
+```java
+editor.insertSnippet("call(${1:name}, ${2:value})${0}", from, to);
+editor.execute(EditorCommand.NEXT_SNIPPET_FIELD);
+```
+
+Tab and Shift-Tab navigate active fields. Escape leaves snippet mode. Inserting a
+snippet is a document transaction and participates in undo history.
 
 ### Supply diagnostics
 
@@ -549,6 +631,58 @@ move with edits, but the application should recompute or clear results when
 their meaning becomes stale. `clearDiagnostics()` removes them and
 `diagnosticCount()` reports their number.
 
+### Diagnostic fixes
+
+Attach named fixes to a diagnostic. CodeMirror presents them with the diagnostic;
+the callback receives its current range after intervening edits:
+
+```java
+editor.setDiagnostics(editor.revision(), java.util.List.of(
+    new Diagnostic(0, 3, Diagnostic.Severity.WARNING, "Use the preferred name",
+        java.util.List.of(new DiagnosticFix("Rename", (from, to) -> {
+          editor.replace(from, to, "preferredName");
+          editor.clearDiagnostics();
+        })))));
+```
+
+`applyDiagnosticFix(diagnosticIndex, actionIndex)` also invokes a fix from Java.
+Indices refer to the current diagnostics in document order and each diagnostic's
+fix list; invalid indices or read-only state return `false`. Fixes can perform
+application-specific edits. Recompute or clear diagnostics afterward as needed.
+
+### Hover help, highlights, gutter markers and themes
+
+These presentation APIs avoid constructing native extension objects:
+
+```java
+editor.setHoverSource((text, position) ->
+    new HoverInfo(0, text.length(), "Help supplied by Java"));
+editor.setHighlights(editor.revision(), java.util.List.of(
+    new TextHighlight(0, 5, "#123456", "#ffe08a", true)));
+editor.setGutterMarks(editor.revision(), java.util.List.of(
+    new GutterMark(0, "●", "Breakpoint")));
+editor.setCustomTheme(new EditorTheme(
+    "#d6e6ff", "#16263e", "#ffe08a", "#345577", "#aac4e6", "#112037", true));
+```
+
+The hover provider is synchronous; return `null` where no help is available. Its
+range must contain the queried position and fit the document. Hover text, marker
+labels and titles are plain text. Set the hover source to `null` to disable it.
+
+Highlights use nonempty UTF-16 ranges and optional foreground/background CSS
+colors (empty strings inherit the editor colors), plus an underline flag. Markers
+appear beside the line containing their UTF-16 position. Both setters replace
+the existing collection and return `false` for a stale revision. Ranges and marker
+positions map through edits. `clearHighlights()` and `clearGutterMarks()` remove
+them; they are not retained when the widget is detached.
+
+`EditorTheme` configures foreground, background, caret, selection, gutter foreground
+and gutter background colors, followed by a dark-mode flag. This palette overlays
+the base `Theme` and leaves syntax highlighting with the chosen language/base theme.
+Set it to `null` to restore the base palette. Hover providers and palettes can be
+configured before attachment and survive reattachment. Required tooltip, highlight
+and gutter styles travel in the existing browser bundle.
+
 ### Remove the widget
 
 The containing panel manages the widget's lifetime. Close subscriptions that your
@@ -573,11 +707,17 @@ The GWT build also checks editing, selection, history, search, diagnostics and
 Java completion through the widget API, including completion after reattachment. Shared merge-widget checks cover split/unified comparison,
 accept/reject, empty documents, Unicode, final-line changes, read-only commands,
 value events and detach/reattach. The showcase also exercises the comparison
-controls in both browser engines. TeaVM tests run in both standard and optimized builds.
+controls in both browser engines. Shared browser checks also cover async request
+cancellation and stale results, snippet fields, completion documentation, keyboard
+bindings, diagnostic fix controls, literal hover text and custom colors. Merge
+contracts verify selection and undo/redo across configuration and layout changes.
+TeaVM tests run in both standard and optimized builds.
 
-The typed Java API does not yet cover creating multiple selections, asynchronous
-completion, snippet placeholders, diagnostic fixes or custom syntax parsers. There
-is also no built-in connection to a language server through LSP. JVM editing and
+The typed Java API covers multiple selections, built-in commands, custom key
+bindings, asynchronous completion, snippet placeholders, diagnostic fixes, hover
+help, highlights, gutter markers and editor color palettes. It does not yet expose
+custom syntax parsers or a built-in connection to a language server through LSP.
+Collaborative editing also remains outside this library's typed API. JVM editing and
 WebAssembly are outside the validated scope.
 
 If your application needs a CodeMirror extension beyond the typed API, it can

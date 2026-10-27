@@ -57,6 +57,14 @@
         <version>3.6.1</version>
         <executions>
           <execution>
+            <id>shared-browser-feature-checks</id>
+            <phase>generate-test-sources</phase>
+            <goals><goal>add-test-source</goal></goals>
+            <configuration>
+              <sources><source>../browser-tests/src/test/java</source></sources>
+            </configuration>
+          </execution>
+          <execution>
             <id>shared-widget-contracts</id>
             <phase>generate-sources</phase>
             <goals>

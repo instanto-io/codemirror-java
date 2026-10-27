@@ -22,38 +22,65 @@ var CodeMirrorTea = (() => {
   __export(editor_exports, {
     anchor: () => anchor,
     apiVersion: () => apiVersion,
+    applyDiagnosticFix: () => applyDiagnosticFix,
     array: () => array,
+    asyncCompletions: () => asyncCompletions,
     available: () => available,
+    binding: () => binding,
+    clearPalette: () => clearPalette,
     command: () => command2,
+    completeFailure: () => completeFailure,
+    completeResult: () => completeResult,
     completion: () => completion,
+    completionCancellation: () => completionCancellation,
     completions: () => completions,
     configure: () => configure,
     count: () => count,
     create: () => create,
     destroy: () => destroy,
     diagnostic: () => diagnostic,
+    diagnosticFix: () => diagnosticFix,
     diagnostics: () => diagnostics,
     edit: () => edit,
     edits: () => edits,
     focus: () => focus,
+    gutterMark: () => gutterMark,
+    gutterMarks: () => gutterMarks,
     hasFocus: () => hasFocus,
     head: () => head,
+    highlight: () => highlight,
+    highlights: () => highlights,
+    hoverInfo: () => hoverInfo,
+    hoverSource: () => hoverSource,
+    insertSnippet: () => insertSnippet,
+    keyBindings: () => keyBindings,
     length: () => length,
+    mainSelectionIndex: () => mainSelectionIndex,
     measure: () => measure,
+    mergeAnchor: () => mergeAnchor,
+    mergeCapture: () => mergeCapture,
     mergeCommand: () => mergeCommand,
     mergeCount: () => mergeCount,
     mergeCreate: () => mergeCreate,
     mergeDestroy: () => mergeDestroy,
+    mergeHead: () => mergeHead,
     mergeMeasure: () => mergeMeasure,
     mergeResolve: () => mergeResolve,
+    mergeSelect: () => mergeSelect,
     mergeSetText: () => mergeSetText,
     mergeText: () => mergeText,
     nativeView: () => nativeView,
+    palette: () => palette,
     push: () => push,
     result: () => result,
     revision: () => revision,
     search: () => search2,
     select: () => select,
+    selectionAnchor: () => selectionAnchor,
+    selectionCount: () => selectionCount,
+    selectionHead: () => selectionHead,
+    selectionRange: () => selectionRange,
+    selections: () => selections,
     state: () => dist_exports,
     text: () => text,
     view: () => dist_exports2
@@ -12251,17 +12278,17 @@ var CodeMirrorTea = (() => {
       }
       let full = parts.join(" ");
       checkPrefix(full, false);
-      let binding = scopeObj[full] || (scopeObj[full] = {
+      let binding2 = scopeObj[full] || (scopeObj[full] = {
         preventDefault: false,
         stopPropagation: false,
         run: ((_b = (_a2 = scopeObj._any) === null || _a2 === void 0 ? void 0 : _a2.run) === null || _b === void 0 ? void 0 : _b.slice()) || []
       });
       if (command3)
-        binding.run.push(command3);
+        binding2.run.push(command3);
       if (preventDefault)
-        binding.preventDefault = true;
+        binding2.preventDefault = true;
       if (stopPropagation)
-        binding.stopPropagation = true;
+        binding2.stopPropagation = true;
     };
     for (let b of bindings) {
       let scopes = b.scope ? b.scope.split(" ") : ["editor"];
@@ -12299,19 +12326,19 @@ var CodeMirrorTea = (() => {
       }
     }
     let ran = /* @__PURE__ */ new Set();
-    let runFor = (binding) => {
-      if (binding) {
-        for (let cmd2 of binding.run)
+    let runFor = (binding2) => {
+      if (binding2) {
+        for (let cmd2 of binding2.run)
           if (!ran.has(cmd2)) {
             ran.add(cmd2);
             if (cmd2(view)) {
-              if (binding.stopPropagation)
+              if (binding2.stopPropagation)
                 stopPropagation = true;
               return true;
             }
           }
-        if (binding.preventDefault) {
-          if (binding.stopPropagation)
+        if (binding2.preventDefault) {
+          if (binding2.stopPropagation)
             stopPropagation = true;
           prevented = true;
         }
@@ -19733,7 +19760,7 @@ var CodeMirrorTea = (() => {
       this.elementClass = "cm-changedLineGutter";
     }
   }();
-  function buildChunkDeco(chunk, doc2, isA, highlight, builder, gutterBuilder) {
+  function buildChunkDeco(chunk, doc2, isA, highlight2, builder, gutterBuilder) {
     let from = isA ? chunk.fromA : chunk.fromB, to = isA ? chunk.toA : chunk.toB;
     let changeI = 0;
     if (from != to) {
@@ -19750,7 +19777,7 @@ var CodeMirrorTea = (() => {
           continue;
         }
         let lineEnd = pos + iter.value.length;
-        if (highlight)
+        if (highlight2)
           while (changeI < chunk.changes.length) {
             let nextChange = chunk.changes[changeI];
             let nextFrom = from + (isA ? nextChange.fromA : nextChange.fromB);
@@ -20239,13 +20266,13 @@ var CodeMirrorTea = (() => {
           render = config2.renderRevertControl;
         this.setupRevertControls(controls, toA, render);
       }
-      let highlight = "highlightChanges" in config2, gutter2 = "gutter" in config2, collapse = "collapseUnchanged" in config2;
-      if (highlight || gutter2 || collapse) {
+      let highlight2 = "highlightChanges" in config2, gutter2 = "gutter" in config2, collapse = "collapseUnchanged" in config2;
+      if (highlight2 || gutter2 || collapse) {
         let effectsA = [], effectsB = [];
-        if (highlight || gutter2) {
+        if (highlight2 || gutter2) {
           let currentConfig = this.a.state.facet(mergeConfig);
           let markGutter = gutter2 ? config2.gutter !== false : currentConfig.markGutter;
-          let highlightChanges = highlight ? config2.highlightChanges !== false : currentConfig.highlightChanges;
+          let highlightChanges = highlight2 ? config2.highlightChanges !== false : currentConfig.highlightChanges;
           effectsA.push(configCompartment.reconfigure([
             mergeConfig.of({ side: "a", sibling: () => this.b, highlightChanges, markGutter }),
             markGutter ? changeGutter : []
@@ -20889,6 +20916,7 @@ var CodeMirrorTea = (() => {
       })
     ];
   }
+  var historyField = historyField_;
   function cmd(side, selection2) {
     return function({ state, dispatch }) {
       if (!selection2 && state.readOnly)
@@ -20961,8 +20989,8 @@ var CodeMirrorTea = (() => {
         return null;
       return new _HistEvent(tr.changes.invert(tr.startState.doc), effects, void 0, selection2 || tr.startState.selection, none2);
     }
-    static selection(selections) {
-      return new _HistEvent(void 0, none2, void 0, void 0, selections);
+    static selection(selections2) {
+      return new _HistEvent(void 0, none2, void 0, void 0, selections2);
     }
   };
   function updateBranch(branch, to, maxLen, newEvent) {
@@ -21012,9 +21040,9 @@ var CodeMirrorTea = (() => {
   function addMappingToBranch(branch, mapping) {
     if (!branch.length)
       return branch;
-    let length2 = branch.length, selections = none2;
+    let length2 = branch.length, selections2 = none2;
     while (length2) {
-      let event = mapEvent(branch[length2 - 1], mapping, selections);
+      let event = mapEvent(branch[length2 - 1], mapping, selections2);
       if (event.changes && !event.changes.empty || event.effects.length) {
         let result2 = branch.slice(0, length2);
         result2[length2 - 1] = event;
@@ -21022,18 +21050,18 @@ var CodeMirrorTea = (() => {
       } else {
         mapping = event.mapped;
         length2--;
-        selections = event.selectionsAfter;
+        selections2 = event.selectionsAfter;
       }
     }
-    return selections.length ? [HistEvent.selection(selections)] : none2;
+    return selections2.length ? [HistEvent.selection(selections2)] : none2;
   }
   function mapEvent(event, mapping, extraSelections) {
-    let selections = conc(event.selectionsAfter.length ? event.selectionsAfter.map((s) => s.map(mapping)) : none2, extraSelections);
+    let selections2 = conc(event.selectionsAfter.length ? event.selectionsAfter.map((s) => s.map(mapping)) : none2, extraSelections);
     if (!event.changes)
-      return HistEvent.selection(selections);
+      return HistEvent.selection(selections2);
     let mappedChanges = event.changes.map(mapping), before = mapping.mapDesc(event.changes, true);
     let fullMapping = event.mapped ? event.mapped.composeDesc(before) : before;
-    return new HistEvent(mappedChanges, StateEffect.mapEffects(event.effects, mapping), fullMapping, event.startSelection.map(before), selections);
+    return new HistEvent(mappedChanges, StateEffect.mapEffects(event.effects, mapping), fullMapping, event.startSelection.map(before), selections2);
   }
   var joinableUserEvent = /^(input\.type|delete)($|\.)/;
   var HistoryState = class _HistoryState {
@@ -25450,6 +25478,28 @@ var CodeMirrorTea = (() => {
   });
   function lintGutter(config2 = {}) {
     return [lintGutterConfig.of(config2), lintGutterMarkers, lintGutterExtension, lintGutterTheme, lintGutterTooltip];
+  }
+  function forEachDiagnostic(state, f) {
+    let lState = state.field(lintState, false);
+    if (lState && lState.diagnostics.size) {
+      let pending = [], pendingStart = [], lastEnd = -1;
+      for (let iter = RangeSet.iter([lState.diagnostics]); ; iter.next()) {
+        for (let i2 = 0; i2 < pending.length; i2++)
+          if (!iter.value || iter.value.spec.diagnostics.indexOf(pending[i2]) < 0) {
+            f(pending[i2], pendingStart[i2], lastEnd);
+            pending.splice(i2, 1);
+            pendingStart.splice(i2--, 1);
+          }
+        if (!iter.value)
+          break;
+        for (let d of iter.value.spec.diagnostics)
+          if (pending.indexOf(d) < 0) {
+            pending.push(d);
+            pendingStart.push(iter.from);
+          }
+        lastEnd = iter.to;
+      }
+    }
   }
 
   // node_modules/codemirror/dist/index.js
@@ -30957,7 +31007,7 @@ var CodeMirrorTea = (() => {
   var oneDark = [oneDarkTheme, /* @__PURE__ */ syntaxHighlighting(oneDarkHighlightStyle)];
 
   // browser/editor.js
-  var apiVersion = 2;
+  var apiVersion = 3;
   var languages = {
     PLAIN: () => [],
     JAVA: java,
@@ -30971,8 +31021,8 @@ var CodeMirrorTea = (() => {
   var themes = { LIGHT: [], DARK: oneDark };
   var layoutTheme = EditorView.theme({ "&": { height: "100%" }, ".cm-scroller": { overflow: "auto" } });
   function create(parent, text2, language2, theme2, readOnly2, tabSize, wrap, listener) {
-    const compartments = Object.fromEntries(["language", "theme", "readOnly", "tabSize", "wrap", "completion", "custom"].map((k) => [k, new Compartment()]));
-    const handle = { view: null, compartments, revision: 0, listener, destroyed: false };
+    const compartments = Object.fromEntries(["language", "theme", "readOnly", "tabSize", "wrap", "completion", "custom", "keys", "hover", "palette"].map((k) => [k, new Compartment()]));
+    const handle = { view: null, compartments, revision: 0, listener, destroyed: false, pending: /* @__PURE__ */ new Set() };
     handle.view = new EditorView({ parent, doc: text2, extensions: [
       basicSetup,
       search(),
@@ -30985,8 +31035,18 @@ var CodeMirrorTea = (() => {
       compartments.wrap.of(wrap ? EditorView.lineWrapping : []),
       compartments.completion.of([]),
       compartments.custom.of([]),
+      compartments.keys.of([]),
+      compartments.hover.of([]),
+      compartments.palette.of([]),
+      highlightsField,
+      markersField,
+      markerGutter,
+      EditorView.baseTheme({ ".cm-javaMarkers .cm-gutterElement": { padding: "0 4px" }, ".cm-javaHover": { padding: "6px 8px", whiteSpace: "pre-wrap" } }),
       EditorView.updateListener.of((update) => {
-        if (update.docChanged) handle.revision++;
+        if (update.docChanged) {
+          handle.revision++;
+          cancelPending(handle);
+        }
         const selectionChanged = !update.startState.selection.eq(update.state.selection);
         if (handle.listener && (update.docChanged || selectionChanged)) {
           const s = update.state.selection.main;
@@ -30999,6 +31059,7 @@ var CodeMirrorTea = (() => {
   function destroy(h) {
     if (h.destroyed) return;
     h.listener = null;
+    cancelPending(h);
     h.completionProvider = null;
     h.view.destroy();
     h.destroyed = true;
@@ -31017,6 +31078,7 @@ var CodeMirrorTea = (() => {
     return true;
   }
   function completions(h, provider) {
+    cancelPending(h);
     closeCompletion(h.view);
     h.completionProvider = provider;
     configure(h, "completion", provider ? autocompletion({ override: [(context) => {
@@ -31028,7 +31090,35 @@ var CodeMirrorTea = (() => {
     h.view.dispatch(setDiagnostics(h.view.state, values2));
   }
   function command2(h, name2) {
-    const commands = { undo, redo, findNext, findPrevious, openSearchPanel, closeSearchPanel, startCompletion, closeCompletion };
+    const commands = {
+      undo,
+      redo,
+      findNext,
+      findPrevious,
+      openSearchPanel,
+      closeSearchPanel,
+      startCompletion,
+      closeCompletion,
+      UNDO: undo,
+      REDO: redo,
+      FOLD: foldCode,
+      UNFOLD: unfoldCode,
+      FOLD_ALL: foldAll,
+      UNFOLD_ALL: unfoldAll,
+      TOGGLE_COMMENT: toggleComment,
+      LINE_START: cursorLineStart,
+      LINE_END: cursorLineEnd,
+      DOCUMENT_START: cursorDocStart,
+      DOCUMENT_END: cursorDocEnd,
+      SELECT_LINE: selectLine,
+      SELECT_ALL: selectAll,
+      INDENT_MORE: indentMore,
+      INDENT_LESS: indentLess,
+      NEWLINE_AND_INDENT: insertNewlineAndIndent,
+      DELETE_LINE: deleteLine,
+      NEXT_SNIPPET_FIELD: nextSnippetField,
+      PREVIOUS_SNIPPET_FIELD: prevSnippetField
+    };
     return commands[name2](h.view);
   }
   function count(h, name2) {
@@ -31067,11 +31157,11 @@ var CodeMirrorTea = (() => {
   function result(from, to, options) {
     return { from, to, options };
   }
-  function completion(label, apply, type, detail) {
-    return { label, apply, type, detail };
+  function completion(label, apply, type, detail, info, isSnippet) {
+    return { label, apply: isSnippet ? snippet(apply) : apply, type, detail, info };
   }
-  function diagnostic(from, to, severity, message) {
-    return { from, to, severity, message };
+  function diagnostic(from, to, severity, message, actions) {
+    return { from, to, severity, message, actions };
   }
   function focus(h) {
     h.view.focus();
@@ -31091,8 +31181,8 @@ var CodeMirrorTea = (() => {
     "&.cm-editor": { height: "auto" },
     ".cm-scroller": { overflowX: "auto" }
   });
-  function mergeCreate(parent, original, modified, mode, language2, theme2, readOnly2, collapse, listener) {
-    const h = { split: null, editor: null, listener, readOnly: readOnly2 };
+  function mergeCreate(parent, original, modified, mode, language2, theme2, readOnly2, collapse, listener, saved) {
+    const h = { split: null, editor: null, listener, readOnly: readOnly2, originalSelection: saved?.originalSelection, destroyed: false };
     const extensions = (editable2) => [
       basicSetup,
       languages[language2](),
@@ -31109,8 +31199,8 @@ var CodeMirrorTea = (() => {
     if (mode === "SPLIT") {
       h.split = new MergeView({
         parent,
-        a: { doc: original, extensions: extensions(false) },
-        b: { doc: modified, extensions: [extensions(!readOnly2), updates] },
+        a: { doc: original, selection: saved?.originalSelection ? EditorSelection.create(saved.originalSelection.ranges.map((r) => EditorSelection.range(Math.min(r.anchor, original.length), Math.min(r.head, original.length))), saved.originalSelection.mainIndex) : void 0, extensions: extensions(false) },
+        b: { doc: modified, selection: saved?.selection, extensions: [extensions(!readOnly2), updates, saved ? historyField.init(() => saved.history) : []] },
         revertControls: readOnly2 ? void 0 : "a-to-b",
         collapseUnchanged: collapseUnchanged2,
         renderRevertControl: () => {
@@ -31132,16 +31222,24 @@ var CodeMirrorTea = (() => {
       h.split.dom.style.backgroundColor = theme2 === "LIGHT" ? "#fff" : "#282c34";
       h.split.dom.style.color = theme2 === "LIGHT" ? "#202937" : "#abb2bf";
     } else {
-      h.editor = new EditorView({ parent, doc: modified, extensions: [
+      h.editor = new EditorView({ parent, doc: modified, selection: saved?.selection, extensions: [
         extensions(!readOnly2),
         layoutTheme,
         updates,
+        saved ? historyField.init(() => saved.history) : [],
         unifiedMergeView({ original, mergeControls: !readOnly2, collapseUnchanged: collapseUnchanged2 })
       ] });
+    }
+    if (saved) {
+      if (saved.focused) h.editor.focus();
+      requestAnimationFrame(() => {
+        if (!h.destroyed) (h.split ? h.split.dom : h.editor.scrollDOM).scrollTop = saved.scrollTop;
+      });
     }
     return h;
   }
   function mergeDestroy(h) {
+    h.destroyed = true;
     h.listener = null;
     if (h.split) h.split.destroy();
     else h.editor.destroy();
@@ -31176,6 +31274,219 @@ var CodeMirrorTea = (() => {
   function mergeMeasure(h) {
     h.editor.requestMeasure();
     if (h.split) h.split.a.requestMeasure();
+  }
+  function selectionRange(anchor2, head2) {
+    return EditorSelection.range(anchor2, head2);
+  }
+  function selections(h, ranges, mainIndex) {
+    h.view.dispatch({ selection: EditorSelection.create(ranges, mainIndex), scrollIntoView: true });
+  }
+  function selectionCount(h) {
+    return h.view.state.selection.ranges.length;
+  }
+  function selectionAnchor(h, index) {
+    return h.view.state.selection.ranges[index].anchor;
+  }
+  function selectionHead(h, index) {
+    return h.view.state.selection.ranges[index].head;
+  }
+  function mainSelectionIndex(h) {
+    return h.view.state.selection.mainIndex;
+  }
+  function binding(h, key, name2, action) {
+    return { key, run: () => {
+      if (action) {
+        action();
+        return true;
+      }
+      return command2(h, name2);
+    } };
+  }
+  function keyBindings(h, bindings) {
+    configure(h, "keys", Prec.highest(keymap.of(bindings)));
+  }
+  function insertSnippet(h, template, from, to) {
+    snippet(template)(h.view, { label: "" }, from, to);
+  }
+  function cancelPending(h) {
+    for (const cancel of [...h.pending]) cancel();
+  }
+  function asyncCompletions(h, provider) {
+    cancelPending(h);
+    closeCompletion(h.view);
+    h.completionProvider = null;
+    configure(h, "completion", provider ? autocompletion({ override: [(context) => new Promise((resolve, reject) => {
+      const doc2 = h.view.state.doc;
+      let settled = false, cancelled = false, cancel = null;
+      const abort = () => {
+        if (settled) return;
+        settled = true;
+        cancelled = true;
+        h.pending.delete(abort);
+        resolve(null);
+        if (cancel) cancel();
+      };
+      const finish = (value) => {
+        if (settled) return;
+        settled = true;
+        h.pending.delete(abort);
+        resolve(h.destroyed || h.view.state.doc !== doc2 || context.aborted ? null : value);
+      };
+      const fail = (message) => {
+        if (settled) return;
+        settled = true;
+        h.pending.delete(abort);
+        reject(new Error(message));
+      };
+      h.pending.add(abort);
+      context.addEventListener("abort", abort, { onDocChange: true });
+      const match = context.matchBefore(/[\w$]*/);
+      try {
+        provider(
+          doc2.toString(),
+          context.pos,
+          context.explicit,
+          match ? match.from : context.pos,
+          { finish, fail, setCancel: (action) => {
+            cancel = action;
+            if (cancelled && cancel) cancel();
+          } }
+        );
+      } catch (error) {
+        fail(String(error));
+      }
+    })] }) : []);
+  }
+  function diagnosticFix(name2, action) {
+    return { name: name2, apply: (editor, from, to) => {
+      if (!editor.state.readOnly) action(from, to);
+    } };
+  }
+  function applyDiagnosticFix(h, index, actionIndex) {
+    if (h.view.state.readOnly || index < 0 || actionIndex < 0) return false;
+    let current = 0, action = null, from = 0, to = 0;
+    forEachDiagnostic(h.view.state, (diagnostic2, start, end) => {
+      if (current++ === index) {
+        action = diagnostic2.actions?.[actionIndex];
+        from = start;
+        to = end;
+      }
+    });
+    if (!action) return false;
+    action.apply(h.view, from, to);
+    return true;
+  }
+  function hoverInfo(from, to, text2) {
+    return { from, to, text: text2 };
+  }
+  function hoverSource(h, source) {
+    configure(h, "hover", source ? hoverTooltip((editor, pos) => {
+      const info = source(editor.state.doc.toString(), pos);
+      if (!info) return null;
+      return { pos: info.from, end: info.to, above: true, create: () => {
+        const dom = document.createElement("div");
+        dom.className = "cm-javaHover";
+        dom.textContent = info.text;
+        return { dom };
+      } };
+    }) : []);
+  }
+  var setHighlights = StateEffect.define();
+  var highlightsField = StateField.define({
+    create: () => Decoration.none,
+    update: (value, tr) => {
+      value = value.map(tr.changes);
+      for (const effect of tr.effects) if (effect.is(setHighlights)) value = effect.value;
+      return value;
+    },
+    provide: (field) => EditorView.decorations.from(field)
+  });
+  function highlight(from, to, color, background2, underline2) {
+    const style = document.createElement("span").style;
+    style.color = color;
+    style.backgroundColor = background2;
+    if (underline2) style.textDecoration = "underline";
+    return Decoration.mark({ attributes: { style: style.cssText }, class: "cm-javaHighlight" }).range(from, to);
+  }
+  function highlights(h, ranges) {
+    h.view.dispatch({ effects: setHighlights.of(Decoration.set(ranges, true)) });
+  }
+  var setMarkers = StateEffect.define();
+  var markersField = StateField.define({
+    create: () => [],
+    update: (value, tr) => {
+      value = value.map((m) => ({ ...m, position: tr.changes.mapPos(m.position, 1) }));
+      for (const effect of tr.effects) if (effect.is(setMarkers)) value = effect.value;
+      return value;
+    }
+  });
+  var JavaMarker = class extends GutterMarker {
+    constructor(label, title) {
+      super();
+      this.label = label;
+      this.title = title;
+    }
+    eq(other) {
+      return this.label === other.label && this.title === other.title;
+    }
+    toDOM() {
+      const dom = document.createElement("span");
+      dom.textContent = this.label;
+      dom.title = this.title;
+      return dom;
+    }
+  };
+  var markerGutter = gutter({
+    class: "cm-javaMarkers",
+    markers: (editor) => RangeSet.of(
+      editor.state.field(markersField).map((m) => new JavaMarker(m.label, m.title).range(editor.state.doc.lineAt(m.position).from)),
+      true
+    )
+  });
+  function gutterMark(position, label, title) {
+    return { position, label, title };
+  }
+  function gutterMarks(h, marks2) {
+    h.view.dispatch({ effects: setMarkers.of(marks2) });
+  }
+  function palette(h, foreground, background2, caret, selection2, gutterForeground, gutterBackground, dark) {
+    configure(h, "palette", Prec.highest(EditorView.theme({
+      "&": { color: foreground, backgroundColor: background2 },
+      ".cm-content": { caretColor: caret },
+      ".cm-cursor, .cm-dropCursor": { borderLeftColor: caret },
+      "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": { backgroundColor: selection2 },
+      ".cm-gutters": { color: gutterForeground, backgroundColor: gutterBackground }
+    }, { dark })));
+  }
+  function clearPalette(h) {
+    configure(h, "palette", []);
+  }
+  function mergeCapture(h) {
+    return {
+      history: h.editor.state.field(historyField),
+      selection: h.editor.state.selection,
+      originalSelection: h.split ? h.split.a.state.selection : h.originalSelection,
+      focused: h.editor.hasFocus,
+      scrollTop: (h.split ? h.split.dom : h.editor.scrollDOM).scrollTop
+    };
+  }
+  function mergeAnchor(h) {
+    return h.editor.state.selection.main.anchor;
+  }
+  function mergeHead(h) {
+    return h.editor.state.selection.main.head;
+  }
+  function mergeSelect(h, anchor2, head2) {
+    h.editor.dispatch({ selection: { anchor: anchor2, head: head2 }, scrollIntoView: true });
+  }
+  function completeResult(request, result2) {
+    request.finish(result2);
+  }
+  function completeFailure(request, message) {
+    request.fail(message);
+  }
+  function completionCancellation(request, action) {
+    request.setCancel(action);
   }
   return __toCommonJS(editor_exports);
 })();

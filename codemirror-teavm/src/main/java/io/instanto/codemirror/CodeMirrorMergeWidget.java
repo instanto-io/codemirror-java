@@ -41,10 +41,10 @@ public final class CodeMirrorMergeWidget extends Composite
   @Override
   protected void onLoad() {
     super.onLoad();
-    mount();
+    mount(null);
   }
 
-  private void mount() {
+  private void mount(Object saved) {
     if (!Native.available())
       throw new IllegalStateException(
           "Load CodeMirrorResources.whenReady before attaching the widget");
@@ -62,7 +62,8 @@ public final class CodeMirrorMergeWidget extends Composite
               String previous = value;
               value = next;
               if (!settingValue) ValueChangeEvent.fireIfNotEqual(this, previous, next);
-            });
+            },
+            saved);
   }
 
   private void release() {
@@ -81,8 +82,9 @@ public final class CodeMirrorMergeWidget extends Composite
 
   private void rebuild() {
     if (handle == null) return;
+    Object saved = Native.mergeCapture(handle);
     release();
-    mount();
+    mount(saved);
   }
 
   public String getOriginal() {
@@ -131,7 +133,7 @@ public final class CodeMirrorMergeWidget extends Composite
     return mode;
   }
 
-  /** Changing presentation preserves both texts but resets selection and undo history. */
+  /** Changing presentation preserves both documents, selection and undo history. */
   public void setMode(Mode next) {
     Objects.requireNonNull(next);
     if (mode != next) {
@@ -140,7 +142,7 @@ public final class CodeMirrorMergeWidget extends Composite
     }
   }
 
-  /** Rebuilds the presentation, preserving both documents. */
+  /** Reconfigures presentation while preserving documents, selection and history. */
   public void setLanguage(Language next) {
     Objects.requireNonNull(next);
     if (language != next) {
@@ -149,7 +151,7 @@ public final class CodeMirrorMergeWidget extends Composite
     }
   }
 
-  /** Rebuilds the presentation, preserving both documents. */
+  /** Reconfigures presentation while preserving documents, selection and history. */
   public void setTheme(Theme next) {
     Objects.requireNonNull(next);
     if (theme != next) {
@@ -233,5 +235,19 @@ public final class CodeMirrorMergeWidget extends Composite
   @Override
   public void onResize() {
     if (handle != null) Native.mergeMeasure(handle);
+  }
+
+  /** Main selection in the modified document. Requires attachment. */
+  public Selection getSelection() {
+    Object h = attached();
+    return new Selection(Native.mergeAnchor(h), Native.mergeHead(h));
+  }
+
+  public void setSelection(Selection selection) {
+    Objects.requireNonNull(selection);
+    Object h = attached();
+    if (selection.to() > getValue().length())
+      throw new IllegalArgumentException("Selection exceeds modified document");
+    Native.mergeSelect(h, selection.anchor(), selection.head());
   }
 }

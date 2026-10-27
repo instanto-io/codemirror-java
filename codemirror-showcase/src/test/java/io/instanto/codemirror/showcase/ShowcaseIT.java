@@ -305,6 +305,42 @@ public class ShowcaseIT {
     assertTrue(errors.toString(), errors.isEmpty());
   }
 
+  @Test
+  public void enhancedWidgetFeatures() {
+    load();
+    io.instanto.codemirror.testing.FeatureBrowserChecks.run(page);
+    assertTrue(errors.toString(), errors.isEmpty());
+  }
+
+  @Test
+  public void newFeatureDemonstrations() {
+    load();
+    page.locator("#demo-actions summary").click();
+    page.locator("#fold-all").click();
+    assertTrue(page.locator("#editor .cm-foldPlaceholder").count() > 0);
+    page.locator("#unfold-all").click();
+    assertEquals(0, page.locator("#editor .cm-foldPlaceholder").count());
+    page.locator("#async-complete").click();
+    page.waitForSelector("#editor .cm-tooltip-autocomplete");
+    page.locator("#editor .cm-tooltip-autocomplete li").first().click();
+    assertEquals("System.out.println(value);", text());
+    page.locator("#presentation").click();
+    assertTrue(page.locator("#editor .cm-javaHighlight").count() > 0);
+    page.locator("#palette").click();
+    assertEquals(
+        "rgb(22, 38, 62)",
+        page.locator("#editor .cm-editor").evaluate("e => getComputedStyle(e).backgroundColor"));
+    page.locator("#snippet").click();
+    assertTrue(text().contains("System.out.println"));
+    page.screenshot(
+        new Page.ScreenshotOptions()
+            .setPath(Path.of("target/features-" + engine + ".png"))
+            .setFullPage(true));
+    page.setViewportSize(390, 844);
+    assertEquals(true, page.evaluate("document.documentElement.scrollWidth <= innerWidth"));
+    assertTrue(errors.toString(), errors.isEmpty());
+  }
+
   private String text() {
     return (String) page.evaluate("showcaseView.state.doc.toString()");
   }

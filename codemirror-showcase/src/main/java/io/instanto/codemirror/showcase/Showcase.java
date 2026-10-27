@@ -19,6 +19,7 @@ public final class Showcase {
   private static Language language = Language.JAVA;
   private static boolean dark = true, readOnly;
   private static int changes;
+  private static boolean customPalette;
 
   private Showcase() {}
 
@@ -42,6 +43,7 @@ public final class Showcase {
 
   private static void start() {
     mount(SAMPLE);
+    io.instanto.codemirror.testing.client.FeatureChecks.installLauncher();
     comparison = new CodeMirrorMergeWidget(SAMPLE, MODIFIED);
     comparison.setLanguage(Language.JAVA);
     comparison.setTheme(Theme.DARK);
@@ -114,6 +116,80 @@ public final class Showcase {
           el("readonly").setAttribute("aria-pressed", String.valueOf(readOnly));
           status(readOnly ? "Read-only: keyboard edits are disabled" : "Editing enabled");
         });
+    on("fold-all", () -> editor.execute(EditorCommand.FOLD_ALL));
+    on("unfold-all", () -> editor.execute(EditorCommand.UNFOLD_ALL));
+    on(
+        "snippet",
+        () -> {
+          Selection selection = editor.getSelection();
+          editor.insertSnippet(
+              "System.out.println(${1:value});${0}", selection.from(), selection.to());
+          editor.focus();
+          status("Edit the selected snippet field; Tab moves to the next placeholder.");
+        });
+    on(
+        "async-complete",
+        () -> {
+          editor.setAsyncCompletionSource(
+              (context, result) -> {
+                com.google.gwt.user.client.Timer timer =
+                    new com.google.gwt.user.client.Timer() {
+                      @Override
+                      public void run() {
+                        result.accept(
+                            new CompletionResult(
+                                context.wordFrom(),
+                                context.position(),
+                                List.of(
+                                    Completion.snippet(
+                                        "println",
+                                        "System.out.println(${1:value});${0}",
+                                        "Async Java provider",
+                                        "Print a value. Tab moves between snippet fields."))));
+                      }
+                    };
+                timer.schedule(200);
+                return timer::cancel;
+              });
+          editor.setReadOnly(false);
+          readOnly = false;
+          el("readonly").setAttribute("aria-pressed", "false");
+          editor.setText("pri");
+          editor.setSelection(new Selection(3, 3));
+          editor.focus();
+          editor.startCompletion();
+          status(
+              "Suggestions arrive asynchronously. Typing or leaving the screen cancels pending work.");
+        });
+    on(
+        "presentation",
+        () -> {
+          editor.setHoverSource(
+              (text, pos) ->
+                  new HoverInfo(
+                      0,
+                      text.length(),
+                      "Hover help supplied by Java. Text is displayed literally."));
+          if (editor.length() > 0)
+            editor.setHighlights(
+                editor.revision(),
+                List.of(
+                    new TextHighlight(
+                        0, Math.min(6, editor.length()), "#172235", "#ffe08a", true)));
+          editor.setGutterMarks(
+              editor.revision(), List.of(new GutterMark(0, "●", "Marker supplied by Java")));
+          status("Hover over the code for help. Highlights and the gutter marker follow edits.");
+        });
+    on(
+        "palette",
+        () -> {
+          customPalette = !customPalette;
+          editor.setCustomTheme(
+              customPalette
+                  ? new EditorTheme(
+                      "#d6e6ff", "#16263e", "#ffe08a", "#345577", "#aac4e6", "#112037", true)
+                  : null);
+        });
     on("undo", () -> editor.undo());
     on("redo", () -> editor.redo());
     on("search", () -> editor.openSearchPanel());
@@ -134,7 +210,14 @@ public final class Showcase {
                       0,
                       Math.min(6, editor.length()),
                       Diagnostic.Severity.WARNING,
-                      "Example diagnostic supplied by Java")));
+                      "Example diagnostic supplied by Java",
+                      List.of(
+                          new DiagnosticFix(
+                              "Remove marked text",
+                              (from, to) -> {
+                                editor.replace(from, to, "");
+                                editor.clearDiagnostics();
+                              })))));
           status("One Java diagnostic published");
         });
     on(
@@ -218,6 +301,12 @@ public final class Showcase {
         new CodeMirrorWidget(
             new EditorOptions(text, language, dark ? Theme.DARK : Theme.LIGHT, readOnly, 4, false));
     editor.setSize("100%", "100%");
+    editor.setKeyBindings(
+        List.of(
+            new KeyBinding("Mod-Shift-l", EditorCommand.TOGGLE_COMMENT),
+            new KeyBinding(
+                "Mod-s",
+                () -> status("Read " + editor.length() + " UTF-16 code units from Java"))));
     editor.setCompletionSource(
         context -> {
           if (!context.explicit() && context.wordFrom() == context.position()) return null;

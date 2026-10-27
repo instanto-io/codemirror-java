@@ -8,6 +8,7 @@ public final class WidgetChecks {
   private WidgetChecks() {}
 
   public static void run() {
+    FeatureChecks.run();
     mergeChecks();
     CodeMirrorWidget widget = new CodeMirrorWidget();
     widget.setSize("400px", "200px");

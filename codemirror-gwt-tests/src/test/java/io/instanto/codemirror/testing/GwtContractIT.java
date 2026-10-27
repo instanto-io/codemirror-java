@@ -64,6 +64,7 @@ public class GwtContractIT {
           assertTrue(page.locator(".cm-content").textContent().contains("System.out.println()"));
           page.locator("#dispose").click();
           assertEquals("true", page.locator("body").getAttribute("data-disposed"));
+          FeatureBrowserChecks.run(page);
           assertTrue(errors.toString(), errors.isEmpty());
         }
     } finally {

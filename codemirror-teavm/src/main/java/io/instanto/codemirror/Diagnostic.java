@@ -1,7 +1,12 @@
 package io.instanto.codemirror;
 
 /** A plain-text diagnostic in UTF-16 offsets. */
-public record Diagnostic(int from, int to, Severity severity, String message) {
+public record Diagnostic(
+    int from, int to, Severity severity, String message, java.util.List<DiagnosticFix> fixes) {
+  public Diagnostic(int from, int to, Severity severity, String message) {
+    this(from, to, severity, message, java.util.List.of());
+  }
+
   public enum Severity {
     ERROR,
     WARNING,
@@ -13,5 +18,6 @@ public record Diagnostic(int from, int to, Severity severity, String message) {
     if (from < 0 || to < from) throw new IllegalArgumentException("Invalid diagnostic range");
     java.util.Objects.requireNonNull(severity);
     java.util.Objects.requireNonNull(message);
+    fixes = java.util.List.copyOf(fixes);
   }
 }

@@ -186,28 +186,52 @@ final class Editor implements AutoCloseable {
     return Native.command(mutable(), "closeSearchPanel");
   }
 
-  /** A synchronous source. Null restores the language's default completion source. */
   public void setCompletionSource(CompletionSource source) {
     Native.completions(
         mutable(),
         source == null
             ? null
-            : (text, pos, explicit, from) -> {
-              var result = source.complete(new CompletionContext(text, pos, explicit, from));
-              if (result == null) return null;
-              if (result.to() > text.length() || result.from() > pos || result.to() < pos)
-                throw new IllegalArgumentException(
-                    "Completion range must contain cursor and fit document");
-              Object values = Native.array();
-              for (var option : result.options())
-                Native.push(
-                    values,
-                    Native.completion(
-                        option.label(),
-                        option.insertText(),
-                        option.kind().name().toLowerCase(java.util.Locale.ROOT),
-                        option.detail()));
-              return Native.result(result.from(), result.to(), values);
+            : (text, pos, explicit, from) ->
+                completionResult(
+                    source.complete(new CompletionContext(text, pos, explicit, from)), text, pos));
+  }
+
+  private Object completionResult(CompletionResult result, String text, int pos) {
+    if (result == null) return null;
+    if (result.to() > text.length() || result.from() > pos || result.to() < pos)
+      throw new IllegalArgumentException("Completion range must contain cursor and fit document");
+    Object values = Native.array();
+    for (Completion option : result.options())
+      Native.push(
+          values,
+          Native.completion(
+              option.label(),
+              option.insertText(),
+              option.kind().name().toLowerCase(java.util.Locale.ROOT),
+              option.detail(),
+              option.documentation(),
+              option.snippet()));
+    return Native.result(result.from(), result.to(), values);
+  }
+
+  public void setAsyncCompletionSource(AsyncCompletionSource source) {
+    Native.asyncCompletions(
+        mutable(),
+        source == null
+            ? null
+            : (text, pos, explicit, from, request) -> {
+              Subscription cancellation =
+                  source.complete(
+                      new CompletionContext(text, pos, explicit, from),
+                      result -> {
+                        try {
+                          Native.completeResult(request, completionResult(result, text, pos));
+                        } catch (RuntimeException error) {
+                          Native.completeFailure(request, error.toString());
+                        }
+                      });
+              Native.completionCancellation(
+                  request, cancellation == null ? null : () -> cancellation.close());
             });
   }
 
@@ -226,13 +250,18 @@ final class Editor implements AutoCloseable {
       Objects.requireNonNull(diagnostic);
       if (diagnostic.to() > length)
         throw new IllegalArgumentException("Diagnostic exceeds document");
+      Object fixes = Native.array();
+      for (DiagnosticFix fix : diagnostic.fixes())
+        Native.push(
+            fixes, Native.diagnosticFix(fix.label(), (from, to) -> fix.action().apply(from, to)));
       Native.push(
           values,
           Native.diagnostic(
               diagnostic.from(),
               diagnostic.to(),
               diagnostic.severity().name().toLowerCase(java.util.Locale.ROOT),
-              diagnostic.message()));
+              diagnostic.message(),
+              fixes));
     }
     Native.diagnostics(h, values);
     return true;
@@ -286,5 +315,118 @@ final class Editor implements AutoCloseable {
     Native.destroy(h);
     handle = null;
     listeners.clear();
+  }
+
+  public List<Selection> getSelections() {
+    Object h = live();
+    List<Selection> ranges = new ArrayList<>();
+    for (int i = 0; i < Native.selectionCount(h); i++)
+      ranges.add(new Selection(Native.selectionAnchor(h, i), Native.selectionHead(h, i)));
+    return List.copyOf(ranges);
+  }
+
+  public int getMainSelectionIndex() {
+    return Native.mainSelectionIndex(live());
+  }
+
+  public void setSelections(List<Selection> ranges, int mainIndex) {
+    Object h = mutable();
+    Objects.requireNonNull(ranges);
+    if (ranges.isEmpty() || mainIndex < 0 || mainIndex >= ranges.size())
+      throw new IllegalArgumentException("Invalid main selection index");
+    Object values = Native.array();
+    for (Selection range : ranges) {
+      Objects.requireNonNull(range);
+      if (range.to() > length()) throw new IllegalArgumentException("Selection exceeds document");
+      Native.push(values, Native.selectionRange(range.anchor(), range.head()));
+    }
+    Native.selections(h, values, mainIndex);
+  }
+
+  public boolean execute(EditorCommand command) {
+    return Native.command(mutable(), Objects.requireNonNull(command).name());
+  }
+
+  public void setKeyBindings(List<KeyBinding> bindings) {
+    Object h = mutable();
+    Object values = Native.array();
+    for (KeyBinding binding : List.copyOf(bindings))
+      Native.push(
+          values,
+          Native.binding(
+              h,
+              binding.key(),
+              binding.command() == null ? null : binding.command().name(),
+              binding.action() == null ? null : () -> binding.action().run()));
+    Native.keyBindings(h, values);
+  }
+
+  public void insertSnippet(String template, int from, int to) {
+    Object h = mutable();
+    Objects.requireNonNull(template);
+    if (from < 0 || to < from || to > length())
+      throw new IllegalArgumentException("Invalid snippet range");
+    Native.insertSnippet(h, template, from, to);
+  }
+
+  public boolean applyDiagnosticFix(int diagnosticIndex, int actionIndex) {
+    return Native.applyDiagnosticFix(mutable(), diagnosticIndex, actionIndex);
+  }
+
+  public void setHoverSource(HoverSource source) {
+    Native.hoverSource(
+        mutable(),
+        source == null
+            ? null
+            : (text, pos) -> {
+              HoverInfo info = source.hover(text, pos);
+              if (info == null) return null;
+              if (info.to() > text.length() || info.from() > pos || info.to() < pos)
+                throw new IllegalArgumentException(
+                    "Hover range must contain position and fit document");
+              return Native.hoverInfo(info.from(), info.to(), info.text());
+            });
+  }
+
+  public boolean setHighlights(int expectedRevision, List<TextHighlight> ranges) {
+    Object h = mutable();
+    if (expectedRevision != revision()) return false;
+    Object values = Native.array();
+    for (TextHighlight range : List.copyOf(ranges)) {
+      if (range.to() > length()) throw new IllegalArgumentException("Highlight exceeds document");
+      Native.push(
+          values,
+          Native.highlight(
+              range.from(), range.to(), range.color(), range.backgroundColor(), range.underline()));
+    }
+    Native.highlights(h, values);
+    return true;
+  }
+
+  public boolean setGutterMarks(int expectedRevision, List<GutterMark> marks) {
+    Object h = mutable();
+    if (expectedRevision != revision()) return false;
+    Object values = Native.array();
+    for (GutterMark mark : List.copyOf(marks)) {
+      if (mark.position() > length()) throw new IllegalArgumentException("Marker exceeds document");
+      Native.push(values, Native.gutterMark(mark.position(), mark.label(), mark.title()));
+    }
+    Native.gutterMarks(h, values);
+    return true;
+  }
+
+  public void setCustomTheme(EditorTheme theme) {
+    Object h = mutable();
+    if (theme == null) Native.clearPalette(h);
+    else
+      Native.palette(
+          h,
+          theme.foreground(),
+          theme.background(),
+          theme.caret(),
+          theme.selection(),
+          theme.gutterForeground(),
+          theme.gutterBackground(),
+          theme.dark());
   }
 }

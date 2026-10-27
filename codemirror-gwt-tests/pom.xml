@@ -50,6 +50,21 @@
     </resources>
     <plugins>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>shared-browser-feature-checks</id>
+            <phase>generate-test-sources</phase>
+            <goals><goal>add-test-source</goal></goals>
+            <configuration>
+              <sources><source>../browser-tests/src/test/java</source></sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>io.instanto</groupId>
         <artifactId>gwt-resources-compat-maven-plugin</artifactId>
         <version>0.1.0-SNAPSHOT</version>
