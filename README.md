@@ -757,6 +757,12 @@ WebJar. If you change the browser integration or its bundled dependencies, use
 Node 22+ and run `npm ci && npm run build` to regenerate it.
 `npm run check:assets` checks that the committed bundle can be reproduced.
 
+## Quality
+
+SpotBugs runs on every build. High-priority findings fail the build, and all findings are published to [code scanning](https://github.com/instanto-io/codemirror-java/security/code-scanning). SonarQube analysis runs on `main` against the organisation's private instance; maintainers see the gate, coverage and issue counts in the workflow summary. The Sonar quality gate is advisory, so a snapshot still publishes when only that gate fails.
+
+See [Actions](https://github.com/instanto-io/codemirror-java/actions) for the latest verification and quality summary.
+
 ## Assets and licenses
 
 The WebJar includes the script, a version/hash manifest and full third-party
