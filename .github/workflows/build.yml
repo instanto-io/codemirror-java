@@ -7,6 +7,8 @@ on:
 permissions:
   contents: read
   packages: write
+  # Required to publish SpotBugs SARIF to code scanning.
+  security-events: write
 concurrency:
   group: codemirror-${{ github.ref }}
   cancel-in-progress: true
@@ -19,6 +21,7 @@ jobs:
       FORGEJO_PACKAGE_USER: ${{ secrets.FORGEJO_PACKAGE_USER }}
       FORGEJO_PACKAGE_TOKEN: ${{ secrets.FORGEJO_PACKAGE_TOKEN || secrets.FORGEJO_PACKAGES_TOKEN || secrets.FORGEJO_PACKAGE_READ_TOKEN }}
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '0'
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
@@ -49,6 +52,38 @@ jobs:
         run: mvn -s .github/maven-settings.xml -B -ntp -Dmaven.repo.local="$MAVEN_CACHE" -Pproduction clean verify
       - name: Verify repository remains clean
         run: git diff --exit-code
+      - name: SonarQube analysis
+        # Analysis belongs to the default branch only: a pull-request run would
+        # otherwise replace the project's main analysis with unmerged code.
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.SONAR_TOKEN != ''
+        continue-on-error: true
+        env:
+          SONAR_HOST_URL: https://sonar.instanto.io
+        run: >-
+          mvn -s .github/maven-settings.xml -B -ntp -Dmaven.repo.local="$MAVEN_CACHE"
+          sonar:sonar -Dsonar.projectKey=codemirror-java -Dsonar.projectName=codemirror-java
+          -Dsonar.qualitygate.wait=true
+      - name: Collect SpotBugs SARIF
+        if: always()
+        run: |
+          rm -rf target/spotbugs-reports
+          mkdir -p target/spotbugs-reports
+          find . -path '*/target/spotbugs/*.sarif' -exec cp {} target/spotbugs-reports/ \;
+      - name: Upload SpotBugs SARIF
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/spotbugs-reports
+          category: spotbugs
+      - name: Upload SpotBugs reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-reports
+          path: '**/target/spotbugs/'
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Upload reports and screenshots
         if: always()
         uses: actions/upload-artifact@v4
