@@ -26,6 +26,7 @@
     <tag>HEAD</tag>
   </scm>
   <properties>
+    <instanto.repository>codemirror-java</instanto.repository>
     <maven.compiler.release>17</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <teavm.optimization>SIMPLE</teavm.optimization>
