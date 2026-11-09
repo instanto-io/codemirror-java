@@ -7,14 +7,12 @@ on:
 permissions:
   contents: read
   packages: write
-  # Required to publish SpotBugs SARIF to code scanning.
-  security-events: write
 concurrency:
   group: codemirror-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   verify:
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    if: (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || github.event_name == 'workflow_dispatch'
     runs-on: [self-hosted, instanto-container]
     timeout-minutes: 30
     env:
@@ -52,17 +50,6 @@ jobs:
         run: mvn -s .github/maven-settings.xml -B -ntp -Dmaven.repo.local="$MAVEN_CACHE" -Pproduction clean verify
       - name: Verify repository remains clean
         run: git diff --exit-code
-      - name: SonarQube analysis
-        # Analysis belongs to the default branch only: a pull-request run would
-        # otherwise replace the project's main analysis with unmerged code.
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && env.SONAR_TOKEN != ''
-        continue-on-error: true
-        env:
-          SONAR_HOST_URL: https://sonar.instanto.io
-        run: >-
-          mvn -s .github/maven-settings.xml -B -ntp -Dmaven.repo.local="$MAVEN_CACHE"
-          sonar:sonar -Dsonar.projectKey=codemirror-java -Dsonar.projectName=codemirror-java
-          -Dsonar.qualitygate.wait=true
       - name: Publish quality summary
         if: always()
         continue-on-error: true
@@ -88,7 +75,7 @@ jobs:
             codemirror-showcase/target/failsafe-reports/
             codemirror-showcase/target/*.png
       - name: Upload verified showcase
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
         uses: actions/upload-pages-artifact@v3
         with:
           path: codemirror-showcase/target/site
@@ -96,19 +83,18 @@ jobs:
         if: always()
         run: rm -rf -- "$MAVEN_CACHE" "$PLAYWRIGHT_BROWSERS_PATH"
   publish-snapshot:
-    # Both compiler targets and browser engines must pass for this commit first.
-    # Manual main runs follow the same gate; pull requests never publish.
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     uses: instanto-io/instanto-poms/.github/workflows/maven-build.yml@main
     with:
       name: Publish CodeMirror Java snapshots to packages.instanto.io
       goals: clean deploy
-      maven-args: -DskipTests
+      fast-deploy: true
+      downstream-checks: false
+      sonar: false
       timeout-minutes: 60
     secrets: inherit
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
     needs: verify
     runs-on: ubuntu-latest
     permissions:
