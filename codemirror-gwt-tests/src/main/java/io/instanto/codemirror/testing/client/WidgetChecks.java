@@ -5,6 +5,8 @@ import io.instanto.codemirror.*;
 
 /** The same GWT widget assertions are compiled and run by both backends. */
 public final class WidgetChecks {
+  private static final String RETAINED_TEXT = "retained";
+
   private WidgetChecks() {}
 
   public static void run() {
@@ -38,14 +40,14 @@ public final class WidgetChecks {
       widget.replace(0, 8, "edited");
       check(events[0] == 2 && widget.getValue().equals("edited"), "native edit event");
       registration.removeHandler();
-      widget.setText("retained");
+      widget.setText(RETAINED_TEXT);
       check(events[0] == 2, "handler removal");
       Object prior = widget.nativeView();
       RootPanel.get().remove(widget);
       check(widget.getElement().getChildCount() == 0, "detach releases native editor");
       RootPanel.get().add(widget);
       check(
-          widget.nativeView() != prior && widget.getValue().equals("retained"),
+          widget.nativeView() != prior && widget.getValue().equals(RETAINED_TEXT),
           "reattach restores value");
       int previousUpdates = updates[0];
       widget.replace(0, widget.length(), "reattached");
@@ -143,7 +145,7 @@ public final class WidgetChecks {
       check(widget.rejectChange(0), "reject after reconfigure");
       check(widget.undo() && widget.getValue().equals("new"), "undo reject");
       check(widget.redo() && widget.getValue().equals("old"), "redo reject");
-      widget.setValue("retained");
+      widget.setValue(RETAINED_TEXT);
       widget.acceptChange(0);
       registration.removeHandler();
       int previousEvents = events[0];
@@ -153,7 +155,7 @@ public final class WidgetChecks {
       check(widget.getElement().getChildCount() == 0, "merge detach removes views");
       RootPanel.get().add(widget);
       check(
-          widget.getOriginal().equals("retained") && widget.getValue().equals("modified"),
+          widget.getOriginal().equals(RETAINED_TEXT) && widget.getValue().equals("modified"),
           "merge reattach retains accepted baseline");
       widget.setMode(CodeMirrorMergeWidget.Mode.SPLIT);
       check(widget.getChangeCount() == 1, "return to split");
