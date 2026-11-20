@@ -6,6 +6,8 @@ import java.util.List;
 
 /** Browser-executed contracts call the real compiled Java API, never a mock. */
 final class Contracts {
+  private static final String API_WRITE_TEXT = "API write";
+
   private Contracts() {}
 
   static void run() {
@@ -116,12 +118,12 @@ final class Contracts {
       check(editor.hasFocus(), "focus ownership");
       for (var language : Language.values()) editor.setLanguage(language);
       editor.setReadOnly(true);
-      editor.setText("API write");
-      check(editor.getText().equals("API write"), "read-only permits programmatic updates");
+      editor.setText(API_WRITE_TEXT);
+      check(editor.getText().equals(API_WRITE_TEXT), "read-only permits programmatic updates");
       editor.removeFromParent();
       editor.removeFromParent();
       check(!editor.isAttached(), "idempotent detach");
-      check(editor.getText().equals("API write"), "detached text retained");
+      check(editor.getText().equals(API_WRITE_TEXT), "detached text retained");
       try {
         editor.undo();
         throw new AssertionError("detached command accepted");
