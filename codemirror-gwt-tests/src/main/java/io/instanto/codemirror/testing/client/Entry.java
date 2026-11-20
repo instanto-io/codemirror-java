@@ -7,6 +7,9 @@ import io.instanto.codemirror.*;
 import java.util.List;
 
 public class Entry implements EntryPoint {
+  private static final String EDITOR_ELEMENT_ID = "editor";
+  private static final String WORLD_TEXT = "World";
+
   public void onModuleLoad() {
     CodeMirrorResources.setScriptUrl(CodeMirrorResources.ASSET_PATH + "?gwt-contract");
     CodeMirrorResources.whenReady(
@@ -24,21 +27,21 @@ public class Entry implements EntryPoint {
       editor.setLanguage(Language.JAVA);
       editor.setTheme(Theme.DARK);
       editor.setText("class Hello {}");
-      RootPanel.get("editor").add(editor);
+      RootPanel.get(EDITOR_ELEMENT_ID).add(editor);
       int[] changes = {0};
       Subscription listener =
           editor.onUpdate(
               e -> {
                 if (e.documentChanged()) changes[0]++;
               });
-      editor.replace(6, 11, "World");
+      editor.replace(6, 11, WORLD_TEXT);
       require(editor.getText().equals("class World {}"), "replace");
       require(changes[0] == 1, "Java update callback");
       editor.setSelection(new Selection(6, 11));
-      require(editor.getSelectedText().equals("World"), "selection");
+      require(editor.getSelectedText().equals(WORLD_TEXT), "selection");
       require(editor.undo() && editor.getText().equals("class Hello {}"), "undo");
       require(editor.redo(), "redo");
-      require(editor.setSearch("World", true, false) && editor.findNext(), "search");
+      require(editor.setSearch(WORLD_TEXT, true, false) && editor.findNext(), "search");
       int revision = editor.revision();
       require(
           editor.setDiagnostics(
@@ -60,7 +63,7 @@ public class Entry implements EntryPoint {
                           Completion.Kind.FUNCTION,
                           "Java callback"))));
       editor.removeFromParent();
-      RootPanel.get("editor").add(editor);
+      RootPanel.get(EDITOR_ELEMENT_ID).add(editor);
       editor.setSelection(new Selection(3, 3));
       editor.focus();
       editor.startCompletion();
@@ -73,7 +76,8 @@ public class Entry implements EntryPoint {
                 editor.removeFromParent();
                 editor.removeFromParent();
                 require(
-                    DomGlobal.document.getElementById("editor").childNodes.length == 0, "dispose");
+                    DomGlobal.document.getElementById(EDITOR_ELEMENT_ID).childNodes.length == 0,
+                    "dispose");
                 DomGlobal.document.body.setAttribute("data-disposed", "true");
               });
       DomGlobal.document.body.setAttribute("data-ready", "true");
