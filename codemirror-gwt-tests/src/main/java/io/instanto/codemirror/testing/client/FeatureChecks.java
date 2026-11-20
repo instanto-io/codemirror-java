@@ -7,11 +7,17 @@ import java.util.List;
 
 /** Identical feature contracts and interactive fixtures for both compilers. */
 public final class FeatureChecks {
+  private static final String COMPACT_EDITOR_HEIGHT = "240px";
+  private static final String EDITOR_WIDTH = "600px";
+  private static final String TEST_HIGHLIGHT_COLOR = "#123456";
+  private static final String JAVA_HIGHLIGHT_CLASS = "cm-javaHighlight";
+  private static final String CHANGED_TEXT = "changed";
+
   private FeatureChecks() {}
 
   public static void run() {
     CodeMirrorWidget w = new CodeMirrorWidget();
-    w.setSize("600px", "240px");
+    w.setSize(EDITOR_WIDTH, COMPACT_EDITOR_HEIGHT);
     w.setLanguage(Language.JAVA);
     w.setValue("one two\nthree");
     RootPanel.get().add(w);
@@ -76,32 +82,33 @@ public final class FeatureChecks {
       w.setText("hello\nworld");
       int revision = w.revision();
       check(
-          w.setHighlights(revision, List.of(new TextHighlight(0, 5, "#123456", "#ffff00", true))),
+          w.setHighlights(
+              revision, List.of(new TextHighlight(0, 5, TEST_HIGHLIGHT_COLOR, "#ffff00", true))),
           "publish highlights");
       check(
           w.setGutterMarks(revision, List.of(new GutterMark(6, "MARK", "Plain <b>title</b>"))),
           "publish markers");
-      check(w.getElement().getInnerHTML().contains("cm-javaHighlight"), "highlight rendered");
+      check(w.getElement().getInnerHTML().contains(JAVA_HIGHLIGHT_CLASS), "highlight rendered");
       check(w.getElement().getInnerHTML().contains("MARK"), "gutter mark rendered");
       w.replace(0, 0, "prefix\n");
       check(
           !w.setHighlights(revision, List.of()) && !w.setGutterMarks(revision, List.of()),
           "stale annotations rejected");
       check(
-          w.getElement().getInnerHTML().contains("cm-javaHighlight")
+          w.getElement().getInnerHTML().contains(JAVA_HIGHLIGHT_CLASS)
               && w.getElement().getInnerHTML().contains("MARK"),
           "annotations map through edits");
       w.clearHighlights();
       w.clearGutterMarks();
-      check(!w.getElement().getInnerHTML().contains("cm-javaHighlight"), "clear highlights");
+      check(!w.getElement().getInnerHTML().contains(JAVA_HIGHLIGHT_CLASS), "clear highlights");
     } finally {
       w.removeFromParent();
     }
     CodeMirrorMergeWidget merge = new CodeMirrorMergeWidget("old", "new");
-    merge.setSize("600px", "240px");
+    merge.setSize(EDITOR_WIDTH, COMPACT_EDITOR_HEIGHT);
     RootPanel.get().add(merge);
     try {
-      merge.setValue("changed");
+      merge.setValue(CHANGED_TEXT);
       merge.setSelection(new Selection(6, 2));
       merge.setTheme(Theme.DARK);
       merge.setLanguage(Language.JAVA);
@@ -116,11 +123,11 @@ public final class FeatureChecks {
           merge.undo() && merge.getValue().equals("new"),
           "merge undo survives settings and layout");
       merge.setMode(CodeMirrorMergeWidget.Mode.SPLIT);
-      check(merge.redo() && merge.getValue().equals("changed"), "merge redo survives layout");
+      check(merge.redo() && merge.getValue().equals(CHANGED_TEXT), "merge redo survives layout");
       merge.setMode(CodeMirrorMergeWidget.Mode.UNIFIED);
       merge.acceptChange(0);
       merge.setTheme(Theme.LIGHT);
-      check(merge.getOriginal().equals("changed"), "accepted baseline survives configuration");
+      check(merge.getOriginal().equals(CHANGED_TEXT), "accepted baseline survives configuration");
     } finally {
       merge.removeFromParent();
     }
@@ -143,7 +150,7 @@ public final class FeatureChecks {
     panel.getElement().setId("feature-fixture");
     CodeMirrorWidget w = new CodeMirrorWidget();
     w.getElement().setId("feature-editor");
-    w.setSize("600px", "240px");
+    w.setSize(EDITOR_WIDTH, COMPACT_EDITOR_HEIGHT);
     w.setLanguage(Language.JAVA);
     w.setValue("pri");
     int[] requests = {0}, cancelled = {0}, finished = {0}, keys = {0};
@@ -195,7 +202,7 @@ public final class FeatureChecks {
           responses.clear();
           for (Runnable response : ready) response.run();
         });
-    button(panel, "feature-edit", () -> w.setText("changed"));
+    button(panel, "feature-edit", () -> w.setText(CHANGED_TEXT));
     button(panel, "feature-replace-source", () -> w.setCompletionSource(c -> null));
     button(panel, "feature-detach", w::removeFromParent);
     button(panel, "feature-attach", () -> panel.insert(w, 0));
@@ -228,11 +235,18 @@ public final class FeatureChecks {
           w.setHoverSource(
               (text, pos) -> new HoverInfo(0, text.length(), "Helpful <b>plain text</b>"));
           w.setHighlights(
-              w.revision(), List.of(new TextHighlight(0, 5, "#123456", "#ffff00", true)));
+              w.revision(),
+              List.of(new TextHighlight(0, 5, TEST_HIGHLIGHT_COLOR, "#ffff00", true)));
           w.setGutterMarks(w.revision(), List.of(new GutterMark(6, "●", "Breakpoint")));
           w.setCustomTheme(
               new EditorTheme(
-                  "#123456", "#f0f4ff", "#123456", "#ddeeff", "#123456", "#eeeeff", false));
+                  TEST_HIGHLIGHT_COLOR,
+                  "#f0f4ff",
+                  TEST_HIGHLIGHT_COLOR,
+                  "#ddeeff",
+                  TEST_HIGHLIGHT_COLOR,
+                  "#eeeeff",
+                  false));
         });
   }
 
