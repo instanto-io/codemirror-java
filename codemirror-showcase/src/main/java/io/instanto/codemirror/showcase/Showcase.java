@@ -7,6 +7,13 @@ import org.teavm.jso.dom.html.*;
 
 /** This entire showcase, including completion and diagnostics, is driven by Java. */
 public final class Showcase {
+  private static final String RETRY_LOAD_BUTTON_ID = "retry-load";
+  private static final String HIDDEN_CLASS = "hidden";
+  private static final String ARIA_PRESSED = "aria-pressed";
+  private static final String FALSE_ATTRIBUTE_VALUE = "false";
+  private static final String READ_ONLY_ATTRIBUTE = "readonly";
+  private static final String POSITION_STYLE_PROPERTY = "position";
+
   private static final HTMLDocument DOC = HTMLDocument.current();
   private static final String SAMPLE =
       "public class Hello {\n    public static void main(String[] args) {\n        System.out.println(\"Hello from TeaVM\");\n    }\n}\n";
@@ -24,18 +31,18 @@ public final class Showcase {
   private Showcase() {}
 
   public static void main(String[] args) {
-    on("retry-load", Showcase::loadResources);
+    on(RETRY_LOAD_BUTTON_ID, Showcase::loadResources);
     loadResources();
   }
 
   private static void loadResources() {
-    el("retry-load").setAttribute("hidden", "");
+    el(RETRY_LOAD_BUTTON_ID).setAttribute(HIDDEN_CLASS, "");
     status("Loading editor…");
     CodeMirrorResources.whenReady(
         Showcase::start,
         error -> {
           status("Unable to load editor assets. Check the served asset path, then retry.");
-          el("retry-load").removeAttribute("hidden");
+          el(RETRY_LOAD_BUTTON_ID).removeAttribute(HIDDEN_CLASS);
         });
     CodeMirrorResources.whenReady(
         () -> DOC.getBody().setAttribute("data-shared-load", "true"), error -> {});
@@ -59,14 +66,14 @@ public final class Showcase {
         () -> {
           comparison.setReadOnly(!comparison.isReadOnly());
           el("compare-readonly")
-              .setAttribute("aria-pressed", String.valueOf(comparison.isReadOnly()));
+              .setAttribute(ARIA_PRESSED, String.valueOf(comparison.isReadOnly()));
         });
     on(
         "collapse",
         () -> {
           comparison.setCollapseUnchanged(!comparison.isCollapseUnchanged());
           el("collapse")
-              .setAttribute("aria-pressed", String.valueOf(comparison.isCollapseUnchanged()));
+              .setAttribute(ARIA_PRESSED, String.valueOf(comparison.isCollapseUnchanged()));
         });
     on(
         "compare-theme",
@@ -84,8 +91,8 @@ public final class Showcase {
         "java",
         () -> {
           language = Language.JAVA;
-          el("java").setAttribute("aria-pressed", "true");
-          el("json").setAttribute("aria-pressed", "false");
+          el("java").setAttribute(ARIA_PRESSED, "true");
+          el("json").setAttribute(ARIA_PRESSED, FALSE_ATTRIBUTE_VALUE);
           editor.setLanguage(language);
           editor.setText(SAMPLE);
           el("filename").setTextContent("Hello.java");
@@ -94,8 +101,8 @@ public final class Showcase {
         "json",
         () -> {
           language = Language.JSON;
-          el("java").setAttribute("aria-pressed", "false");
-          el("json").setAttribute("aria-pressed", "true");
+          el("java").setAttribute(ARIA_PRESSED, FALSE_ATTRIBUTE_VALUE);
+          el("json").setAttribute(ARIA_PRESSED, "true");
           editor.setLanguage(language);
           editor.setText(
               "{\n  \"editor\": \"CodeMirror 6\",\n  \"language\": \"Java + TeaVM\"\n}\n");
@@ -109,11 +116,11 @@ public final class Showcase {
           DOC.getBody().setAttribute("data-theme", dark ? "dark" : "light");
         });
     on(
-        "readonly",
+        READ_ONLY_ATTRIBUTE,
         () -> {
           readOnly = !readOnly;
           editor.setReadOnly(readOnly);
-          el("readonly").setAttribute("aria-pressed", String.valueOf(readOnly));
+          el(READ_ONLY_ATTRIBUTE).setAttribute(ARIA_PRESSED, String.valueOf(readOnly));
           status(readOnly ? "Read-only: keyboard edits are disabled" : "Editing enabled");
         });
     on("fold-all", () -> editor.execute(EditorCommand.FOLD_ALL));
@@ -153,7 +160,7 @@ public final class Showcase {
               });
           editor.setReadOnly(false);
           readOnly = false;
-          el("readonly").setAttribute("aria-pressed", "false");
+          el(READ_ONLY_ATTRIBUTE).setAttribute(ARIA_PRESSED, FALSE_ATTRIBUTE_VALUE);
           editor.setText("pri");
           editor.setSelection(new Selection(3, 3));
           editor.focus();
@@ -231,7 +238,7 @@ public final class Showcase {
         () -> {
           editor.removeFromParent();
           com.google.gwt.user.client.ui.RootPanel.get("editor").add(editor);
-          el("position").setTextContent("Offset 0 · revision 0");
+          el(POSITION_STYLE_PROPERTY).setTextContent("Offset 0 · revision 0");
           expose(jsinterop.base.Js.uncheckedCast(editor.nativeView()));
           status("Detached and reattached the widget; text and configuration retained");
         });
@@ -261,11 +268,11 @@ public final class Showcase {
   }
 
   private static void showCompare(boolean show) {
-    el("editor-mode").setAttribute("aria-pressed", String.valueOf(!show));
-    el("compare-mode").setAttribute("aria-pressed", String.valueOf(show));
+    el("editor-mode").setAttribute(ARIA_PRESSED, String.valueOf(!show));
+    el("compare-mode").setAttribute(ARIA_PRESSED, String.valueOf(show));
     if (show) {
-      el("editor-screen").setAttribute("hidden", "");
-      el("compare-screen").removeAttribute("hidden");
+      el("editor-screen").setAttribute(HIDDEN_CLASS, "");
+      el("compare-screen").removeAttribute(HIDDEN_CLASS);
       if (!comparison.isAttached())
         com.google.gwt.user.client.ui.RootPanel.get("compare").add(comparison);
       comparison.onResize();
@@ -273,8 +280,8 @@ public final class Showcase {
           "Compare the original and modified documents. Switch to Unified to accept or reject changes.");
     } else {
       if (comparison.isAttached()) comparison.removeFromParent();
-      el("compare-screen").setAttribute("hidden", "");
-      el("editor-screen").removeAttribute("hidden");
+      el("compare-screen").setAttribute(HIDDEN_CLASS, "");
+      el("editor-screen").removeAttribute(HIDDEN_CLASS);
       editor.requestMeasure();
       status("Ready. Type pri, then use Complete or Ctrl+Space.");
     }
@@ -283,12 +290,12 @@ public final class Showcase {
   private static void comparisonMode(CodeMirrorMergeWidget.Mode mode) {
     comparison.setMode(mode);
     boolean split = mode == CodeMirrorMergeWidget.Mode.SPLIT;
-    if (split) el("comparison-original").removeAttribute("hidden");
-    else el("comparison-original").setAttribute("hidden", "");
+    if (split) el("comparison-original").removeAttribute(HIDDEN_CLASS);
+    else el("comparison-original").setAttribute(HIDDEN_CLASS, "");
     el("comparison-modified")
         .setTextContent(split ? "Modified · Hello.java" : "Hello.java · Unified changes");
-    el("split").setAttribute("aria-pressed", String.valueOf(split));
-    el("unified").setAttribute("aria-pressed", String.valueOf(!split));
+    el("split").setAttribute(ARIA_PRESSED, String.valueOf(split));
+    el("unified").setAttribute(ARIA_PRESSED, String.valueOf(!split));
     el("compare-status")
         .setTextContent(
             split
@@ -328,12 +335,12 @@ public final class Showcase {
             changes++;
             el("changes").setTextContent(String.valueOf(changes));
           }
-          el("position")
+          el(POSITION_STYLE_PROPERTY)
               .setTextContent(
                   "Offset " + update.selection().head() + " · revision " + update.revision());
         });
     com.google.gwt.user.client.ui.RootPanel.get("editor").add(editor);
-    el("position").setTextContent("Offset 0 · revision 0");
+    el(POSITION_STYLE_PROPERTY).setTextContent("Offset 0 · revision 0");
     expose(jsinterop.base.Js.uncheckedCast(editor.nativeView()));
   }
 
